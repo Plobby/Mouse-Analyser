@@ -12,6 +12,7 @@ We are completing this project as part of a Team Software Engineering module at 
 Technology Used
 ---------------
 * IDLE
+* Atom
 
 Features
 --------
