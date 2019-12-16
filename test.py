@@ -1,6 +1,12 @@
 from tkinter import *
 
 root = Tk()
-theLabel = Label(root, text="MouseHUB")
-theLabel.pack()
+window = Label(root, text="MouseHUB")
+window.pack()
+root.title("Welcome to MouseHUB!")
+root.geometry('1200x720')
+
+
+
+
 root.mainloop()
