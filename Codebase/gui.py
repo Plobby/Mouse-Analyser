@@ -28,13 +28,13 @@ window = Label(root, text="MouseHUB")
 window.pack()   
 
 btn = Button(window, text="Import Video", width=25, bg="orange", command = import_video)
-btn.grid(column=1, row=5)
+btn.grid(column=1, row=99)
 
 btn1 = Button(window, text="Settings", bg="orange", width=25, command= open_settings)
-btn1.grid(column=2, row=5)
+btn1.grid(column=2, row=99)
 
 btn2 = Button(window, text="Exit", width=50, command = close_window)
-btn2.grid(column=3, row=5)
+btn2.grid(column=3, row=99)
 
 
 root.mainloop()
