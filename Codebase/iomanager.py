@@ -59,6 +59,3 @@ def open_files(videos):
         # Destroy all cv2 windows
         cv2.destroyAllWindows()
     return videos
-
-# Invocation
-get_videos(True)
