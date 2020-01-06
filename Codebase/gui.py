@@ -12,7 +12,6 @@ def close_window():
 def open_settings():
     Toplevel(settings)
 
-
 root = Tk()
 root.title("Welcome to MouseHUB!")
 root.geometry('1200x720')
@@ -22,7 +21,6 @@ settings = Tk()
 settings.title("Settings")
 settings.geometry("800x600")
 settings.configure(background='black')
-
 
 window = Label(root, text="MouseHUB")
 window.pack()   
