@@ -10,7 +10,7 @@ ROOT = Tk()
 ROOT.withdraw()
 
 # Create variable with allowed file types
-VALID_FILES = [("mp4 videos", "*.mp4"), ("avi videos", "*.avi")]
+VALID_FILES = [("mp4 videos", "*.mp4"), ("avi videos", "*.avi"), ("mpeg videos", "*.mpg")]
 
 # Function to import videos
 def get_videos(multiple):
