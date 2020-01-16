@@ -1,13 +1,6 @@
 # Imports
 from tkinter import filedialog
-from tkinter import Tk
-
-import numpy
 import cv2
-
-# Hide the main tkinter window
-ROOT = Tk()
-ROOT.withdraw()
 
 # Create variable with allowed file types
 VALID_FILES = [("mp4 videos", "*.mp4"), ("avi videos", "*.avi"), ("mpeg videos", "*.mpg")]
