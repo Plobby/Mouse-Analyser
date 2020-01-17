@@ -62,6 +62,8 @@ def save_videos(videoCaps, outputLocation):
         #Release VideoWriter object
         out.release()
 
+        fileIndex += 1
+
 
 # Function to attempt to open files with openCV
 def open_files(videos):
