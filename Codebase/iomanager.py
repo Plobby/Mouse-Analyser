@@ -1,6 +1,7 @@
-# Imports
 from tkinter import filedialog
 import cv2
+import logging
+from logging import LogLevel
 
 # Create variable with allowed file types
 VALID_FILES = [("mpeg videos", "*.mpg"), ("mp4 videos", "*.mp4"), ("avi videos", "*.avi")]
@@ -8,13 +9,13 @@ VALID_FILES = [("mpeg videos", "*.mpg"), ("mp4 videos", "*.mp4"), ("avi videos",
 # Function to import videos
 def get_videos(multiple):
     # Prompt for a file to be selected
-    print("Please select a file to analyse!")
+    logging.log(LogLevel.INFO, "Please select a file to analyse!")
     # Create variable to store videos
     videos = []
     # Check if multiple are allowed
     if multiple:
         # Inform the user multiple files are allowed
-        print("Multiple files can be selected!")
+        logging.log(LogLevel.INFO, "Multiple files can be selected!")
         # Select multiple files and return the result
         videos = filedialog.askopenfilenames(filetypes=VALID_FILES)
     else:
