@@ -29,14 +29,17 @@ def save_videos(videoCaps, outputLocation):
         #Open folder selection dialog box
         outputLocation = filedialog.askdirectory()
 
+    #Index for giving unique names to each video being saved
+    fileIndex = 1
+
     for video in videoCaps:
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH)) #Get frame width
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get frame height
         fps = int(video.get(cv2.CAP_PROP_FPS)) #Get video fps
         fourcc = int(cv2.VideoWriter_fourcc(*'mpg1')) #Fourcc code for writing .mpg video files
 
-        #Concatenate outputLocation with placeholder output.mpg string
-        fileLocation = outputLocation + "/output.mpg"                   #TODO: Create more meaningful filename
+        #Concatenate outputLocation with output--fileIndex--.mpg
+        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mpg"
         #Create VideoWriter object using specs of the video being saved
         out = cv2.VideoWriter(fileLocation, fourcc, fps, (width, height))
 
