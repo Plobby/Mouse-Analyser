@@ -12,11 +12,6 @@ def import_video():
 def close_window():
     #exits program
     raise SystemExit
-
-def show_frame(self, page_name):
-        #Shows Frame from page name
-        frame = self.frames[page_name]
-        frame.tkraise()
 #root = Tk() # TK has to be before the images however cant initialize images in pages if they're after the page, however required to be before Tk(), Toplevel() ect.
 
 # Pages Code From = https://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter/7557028#7557028
