@@ -1,7 +1,7 @@
 from tkinter import filedialog
 import cv2
 import logging
-from logging import LogLevel
+from cli_logger import LogLevel
 
 # Create variable with allowed file types
 VALID_FILES = [("mpeg videos", "*.mpg"), ("mp4 videos", "*.mp4"), ("avi videos", "*.avi")]
@@ -53,8 +53,8 @@ def save_videos(videoCaps, outputLocation):
             #Break if no frame is returned
             if (not ret):
                 break
-            
-            #Write frame 
+
+            #Write frame
             out.write(frame)
 
         #Release VideoCapture object
@@ -77,7 +77,7 @@ def open_files(videos):
         cap = cv2.VideoCapture(video)
         # Iterate while capture is opened
         while (cap.isOpened()):
-            # Read the next return and get the frame 
+            # Read the next return and get the frame
             ret, frame = cap.read()
             # Break if no frame was returned
             if (not ret):
