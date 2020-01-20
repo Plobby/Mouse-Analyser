@@ -1,6 +1,6 @@
+
 from tkinter import *
 import tkinter as tk
-import logging
 import iomanager
 from PIL import ImageTk, Image
 counter = 0
@@ -128,7 +128,6 @@ class SettingsPage(tk.Frame):
         SettingsButton.bind("<Enter>", Settings_on_enter)
         SettingsButton.bind("<Leave>", Settings_on_leave)
 """
-
 
 app = Pages()
 app.mainloop()

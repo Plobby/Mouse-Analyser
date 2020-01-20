@@ -1,10 +1,17 @@
 from tkinter import filedialog
+from tkinter import Tk
+from PIL import ImageTk, Image
+import PIL as PIL
+import numpy
 import cv2
-import logging
-from cli_logger import LogLevel
+import gui
+
+# Hide the main tkinter window
+ROOT = Tk()
+ROOT.withdraw()
 
 # Create variable with allowed file types
-VALID_FILES = [("mpeg videos", "*.mpg"), ("mp4 videos", "*.mp4"), ("avi videos", "*.avi")]
+VALID_FILES = [ ("mpeg videos", "*.mpg"), ("avi videos", "*.avi"), ("mp4 videos", "*.mp4")]
 
 # Function to import videos
 def get_videos(multiple):
@@ -84,8 +91,12 @@ def open_files(videos):
                 break
             # Convert the frame to greyscale
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            #Covert to PIL
+            #photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(gray))
+            #Attempts to show on canvas
+            #VideoFrame['image'] = photo
             # Show the greyscale frame
-            cv2.imshow('Video ' + str(index), gray)
+            cv2.imshow(gui.VideoPage.VideoFrame, gray)
             # Wait for the next key
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
