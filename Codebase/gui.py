@@ -8,6 +8,10 @@ counter = 0
 def import_video():
    iomanager.get_videos(True)
 
+def show_window():
+    app = Pages()
+    app.protocol("WM_DELETE_WINDOW", close_window)
+    app.mainloop()
 
 def close_window():
     #exits program
@@ -43,16 +47,14 @@ class Pages(tk.Tk):
     def get_page(self, page_class):
         return self.frames[page_class]
 
-
-
-TitleLabelImage = ImageTk.PhotoImage(Image.open("Assets/TitleBar.jpg"))
-SettingsImage = ImageTk.PhotoImage(Image.open("Assets/SettingsBar.jpg"))
-SettingsHoverImage = ImageTk.PhotoImage(Image.open("Assets/SettingsHover.jpg"))
-VideoImage = ImageTk.PhotoImage(Image.open("Assets/VideoBar.jpg"))
-VideoHoverImage = ImageTk.PhotoImage(Image.open("Assets/VideoHover.jpg"))
-ExitImage = ImageTk.PhotoImage(Image.open("Assets/ExitBar.jpg"))
-ExitHoverImage = ImageTk.PhotoImage(Image.open("Assets/ExitHover.jpg"))
-SmthingImage = ImageTk.PhotoImage(Image.open("Assets/DataBar.jpg"))
+TitleLabelImage = ImageTk.PhotoImage(Image.open("../Assets/TitleBar.jpg"))
+SettingsImage = ImageTk.PhotoImage(Image.open("../Assets/SettingsBar.jpg"))
+SettingsHoverImage = ImageTk.PhotoImage(Image.open("../Assets/SettingsHover.jpg"))
+VideoImage = ImageTk.PhotoImage(Image.open("../Assets/VideoBar.jpg"))
+VideoHoverImage = ImageTk.PhotoImage(Image.open("../Assets/VideoHover.jpg"))
+ExitImage = ImageTk.PhotoImage(Image.open("../Assets/ExitBar.jpg"))
+ExitHoverImage = ImageTk.PhotoImage(Image.open("../Assets/ExitHover.jpg"))
+SmthingImage = ImageTk.PhotoImage(Image.open("../Assets/DataBar.jpg"))
 
 class VideoPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -82,7 +84,6 @@ class VideoPage(tk.Frame):
 class DataPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
         #Shows Title in Top Right
         TitleLabel = Label(self, image=TitleLabelImage,width=500,height=175, bd=0, highlightthickness=0).grid(row=0, column=1)
         #Shows Video Page Button m in Menu
@@ -93,13 +94,10 @@ class DataPage(tk.Frame):
         SettingsButton = Button(self, image=SettingsImage,command=lambda: controller.show_frame(SettingsPage),width=195,height=175,bd=0, highlightthickness=0).grid(row=0, column=4)
         #Shows last item in Menu
         ExitButton = Button(self, image=ExitImage, command = close_window,width=195,height=175,bd=0, highlightthickness=0,).grid(row=0, column=5)
-
-
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
         #Shows Title in Top Right
         TitleLabel = Label(self, image=TitleLabelImage,width=500,height=175, bd=0, highlightthickness=0).grid(row=0, column=1)
         #Shows Video Page Button m in Menu
@@ -113,7 +111,7 @@ class SettingsPage(tk.Frame):
 
 
 
-#Code to do hover images, need to find a better way to implement it.
+# Code to do hover images, need to find a better way to implement it.
 """
         def Video_on_enter(e):
             VideoButton['image'] = VideoHoverImage
@@ -128,6 +126,3 @@ class SettingsPage(tk.Frame):
         SettingsButton.bind("<Enter>", Settings_on_enter)
         SettingsButton.bind("<Leave>", Settings_on_leave)
 """
-
-app = Pages()
-app.mainloop()

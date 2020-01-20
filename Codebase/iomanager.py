@@ -5,6 +5,8 @@ import PIL as PIL
 import numpy
 import cv2
 import gui
+import cli_logger
+from cli_logger import LogLevel
 
 # Hide the main tkinter window
 ROOT = Tk()
@@ -16,13 +18,13 @@ VALID_FILES = [ ("mpeg videos", "*.mpg"), ("avi videos", "*.avi"), ("mp4 videos"
 # Function to import videos
 def get_videos(multiple):
     # Prompt for a file to be selected
-    logging.log(LogLevel.INFO, "Please select a file to analyse!")
+    cli_logger.log(LogLevel.INFO, "Please select a file to analyse!")
     # Create variable to store videos
     videos = []
     # Check if multiple are allowed
     if multiple:
         # Inform the user multiple files are allowed
-        logging.log(LogLevel.INFO, "Multiple files can be selected!")
+        cli_logger.log(LogLevel.INFO, "Multiple files can be selected!")
         # Select multiple files and return the result
         videos = filedialog.askopenfilenames(filetypes=VALID_FILES)
     else:
