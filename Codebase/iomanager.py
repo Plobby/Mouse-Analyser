@@ -40,7 +40,7 @@ def save_videos(videoCaps, outputLocation):
         #Open folder selection dialog box
         outputLocation = filedialog.askdirectory()
 
-    #Index for giving unique names to each video being saved
+    # Index for giving unique names to each video being saved
     fileIndex = 1
 
     for video in videoCaps:
