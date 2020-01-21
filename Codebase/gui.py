@@ -6,26 +6,17 @@ import PIL
 import cv2
 
 # Load images
-TitleLabelImage = ImageTk.PhotoImage(Image.open("../Assets/TitleBar.png"))
-SettingsImage = ImageTk.PhotoImage(Image.open("../Assets/SettingsBar.jpg"))
-SettingsHoverImage = ImageTk.PhotoImage(Image.open("../Assets/SettingsHover.jpg"))
-VideoImage = ImageTk.PhotoImage(Image.open("../Assets/VideoBar.jpg"))
-VideoHoverImage = ImageTk.PhotoImage(Image.open("../Assets/VideoHover.jpg"))
-ExitImage = ImageTk.PhotoImage(Image.open("../Assets/ExitBar.jpg"))
-ExitHoverImage = ImageTk.PhotoImage(Image.open("../Assets/ExitHover.jpg"))
-DataImage = ImageTk.PhotoImage(Image.open("../Assets/DataBar.jpg"))
-
 AddVideosImage = ImageTk.PhotoImage(Image.open("../Assets/AddVideosButton.jpg"))
 ClearImage = ImageTk.PhotoImage(Image.open("../Assets/ClearButton.jpg"))
 ProcessImage = ImageTk.PhotoImage(Image.open("../Assets/ProcessButton.jpg"))
+
+image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
 
 # Colour variables
 color_background = "#202020"
 color_hover = "#2B2B2B"
 color_container = "#383838"
 color_text = "#D4D4D4"
-
-image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
 
 # Global variable to store app instance
 app = None
