@@ -102,8 +102,7 @@ def open_files(videos):
             # Wait for the next key
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-        #Save video
-        save_videos([cap], outputLocation=None)
+
         # Release the capture variable
         cap.release()
         # Destroy all cv2 windows
