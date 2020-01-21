@@ -1,7 +1,8 @@
 from tkinter import filedialog
 from tkinter import Tk
+import tkinter as tk
 from PIL import ImageTk, Image
-import PIL as PIL
+import PIL
 import numpy
 import cv2
 import gui
@@ -13,7 +14,7 @@ ROOT = Tk()
 ROOT.withdraw()
 
 # Create variable with allowed file types
-VALID_FILES = [ ("mpeg videos", "*.mpg"), ("avi videos", "*.avi"), ("mp4 videos", "*.mp4")]
+VALID_FILES = [("mp4 videos", "*.mp4"), ("mpeg videos", "*.mpg"), ("avi videos", "*.avi")]
 
 # Function to import videos
 def get_videos(multiple):
@@ -31,7 +32,7 @@ def get_videos(multiple):
         # Select one file and return the result
         videos = [filedialog.askopenfilename(filetypes=VALID_FILES)]
     # Open the videos and return
-    return open_files(videos)
+    return videos
 
 #Function to save a *LIST* of CV2 VideoCapture objects
 def save_videos(videoCaps, outputLocation):
@@ -73,39 +74,31 @@ def save_videos(videoCaps, outputLocation):
 
         fileIndex += 1
 
+class VideoInput():
+    frames_done = 0
+    frames_total = 0
+    progress = 0
 
-# Function to attempt to open files with openCV
-def open_files(videos):
-    # Variable counter to store the video index
-    index = 0
-    # Attempt to open the video files
-    for video in videos:
-        # Increment the video index
-        index = index + 1
-        # Capture video and store in a variable
-        cap = cv2.VideoCapture(video)
-        # Iterate while capture is opened
-        while (cap.isOpened()):
-            # Read the next return and get the frame
-            ret, frame = cap.read()
-            # Break if no frame was returned
+    def __init__(self, file):
+        self.file = file
+    
+    def open(self):
+        self.cap = cv2.VideoCapture(self.file)
+        self.frames_total = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    def close(self):
+        self.cap.release()
+
+    def get_frame(self):
+        if (self.cap.isOpened()):
+            ret, frame = self.cap.read()
             if (not ret):
-                break
-            # Convert the frame to greyscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            #Covert to PIL
-            #photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(gray))
-            #Attempts to show on canvas
-            #VideoFrame['image'] = photo
-            # Show the greyscale frame
-            cv2.imshow(gui.VideoPage.VideoFrame, gray)
-            # Wait for the next key
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        #Save video
-        save_videos([cap], outputLocation=None)
-        # Release the capture variable
-        cap.release()
-        # Destroy all cv2 windows
-        cv2.destroyAllWindows()
-    return videos
+                self.close()
+                return None
+            # TODO: Process the frame properly here
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = PIL.Image.fromarray(frame)
+            self.frames_done = self.frames_done + 1
+            return frame
+        self.close()
+        return None
