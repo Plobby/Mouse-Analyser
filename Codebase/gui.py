@@ -12,11 +12,36 @@ ProcessImage = ImageTk.PhotoImage(Image.open("../Assets/ProcessButton.jpg"))
 
 image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
 
-# Colour variables
-color_background = "#202020"
-color_hover = "#2B2B2B"
-color_container = "#383838"
-color_text = "#D4D4D4"
+################
+# This section has a few sections of custom colours for users to select from, before setting colours to the default at the end.
+##################
+
+# Default Colour variables
+default_color_background = "#202020"
+default_color_hover = "#2B2B2B"
+default_color_container = "#383838"
+default_color_text = "#D4D4D4"
+
+# Debugging Colour variables - not for normal use!!!
+debug_color_background = "#000FFF"
+debug_color_hover = "#00FF00"
+debug_container = "#FFF100"
+debug_color_text = "#FF0000"
+
+# Light mode (disgusting)
+light_color_background = "#EDEDED"
+light_color_hover = "#76CBE3"
+light_color_container = "#F5F5F5"
+light_color_text = "#009696"
+
+currentThemeIndex = 0
+
+# Setting default colours
+color_background = debug_color_background
+color_hover = debug_color_hover
+color_container = debug_container
+color_text = debug_color_text
+
 
 # Global variable to store app instance
 app = None
@@ -32,6 +57,7 @@ def show_window():
     global app
     app = Pages()
     app.title("MouseHUB")
+    app.iconbitmap("../Assets/IconLarge.ico")
     app.geometry("1280x720")
     app.minsize(700, 500)
     app.protocol("WM_DELETE_WINDOW", close_window)
@@ -58,10 +84,10 @@ class Pages(tk.Tk):
         self.add_toolbar()
         self.add_frames()
         self.add_statusbar()
-        
+
         # Show the first frame
         self.show_frame(VideoPage)
-    
+
     # Function to add the navigation bar
     def add_toolbar(self):
         # Frame for the title bar
@@ -182,12 +208,38 @@ class VideoPage(tk.Frame):
 class DataPage(tk.Frame):
     def __init__(self, parent, container):
         # Call superclass function
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg=color_background)
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent, container):
         # Call superclass function
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg=color_background)
+        #Configuring rows
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(2, weight=1)
+
+        # Creating a frame to put all the buttons in.
+        settings_frame = tk.Frame(self,bg=color_background)
+        settings_frame.grid(row=0,column=1,sticky="nesw")
+
+        self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command= self.rotateTheme)
+        self.change_theme_button.config(bg=color_container, fg=color_text,font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
+        self.change_theme_button.grid(row=0,column=0,pady=4)
+
+    def rotateTheme(self):
+        global currentThemeIndex
+        # Creating a dict to store all the themes in.
+        self.themeList = ["Theme: Dark","Theme: Light","Theme: Debug"]
+
+        print("ROTATE RUNNING")
+        if (currentThemeIndex < 2):
+            currentThemeIndex += 1
+        else:
+            currentThemeIndex = 0
+
+        self.change_theme_button.config(text=self.themeList[currentThemeIndex])
+
 
 class MenuButton(tk.Button):
     def __init__(self, parent, text, func):
