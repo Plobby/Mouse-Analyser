@@ -12,6 +12,13 @@ ProcessImage = ImageTk.PhotoImage(Image.open("../Assets/ProcessButton.jpg"))
 
 image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
 
+icon_add = ImageTk.PhotoImage(file="../Assets/IconAdd.png")
+icon_add_active = ImageTk.PhotoImage(file="../Assets/IconAddActive.png")
+icon_delete = ImageTk.PhotoImage(file="../Assets/IconDelete.png")
+icon_delete_active = ImageTk.PhotoImage(file="../Assets/IconDeleteActive.png")
+icon_process = ImageTk.PhotoImage(file="../Assets/IconProcess.png")
+icon_process_active = ImageTk.PhotoImage(file="../Assets/IconProcessActive.png")
+
 # Colour variables
 color_background = "#202020"
 color_hover = "#2B2B2B"
@@ -24,13 +31,12 @@ app = None
 # Function to import videos
 def import_video():
     videos = iomanager.get_videos(True)
-    first = iomanager.VideoInput(videos[0])
-    app.play_video(first)
+    app.play_video(videos[0])
 
 # Function to show the GUI
 def show_window():
     global app
-    app = Pages()
+    app = App()
     app.title("MouseHUB")
     app.geometry("1280x720")
     app.minsize(700, 500)
@@ -43,7 +49,7 @@ def close_window():
     raise SystemExit
 
 # Pages Code From = https://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter/7557028#7557028
-class Pages(tk.Tk):
+class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         # Call superclass function
         tk.Toplevel.__init__(self, *args, **kwargs, bg=color_background)
@@ -117,11 +123,15 @@ class Pages(tk.Tk):
         status_bar_frame.grid_columnconfigure(0, weight=1)
         status_bar_frame.grid_columnconfigure(1, weight=1)
         # Status bar text
-        status_bar_text = tk.Label(status_bar_frame, text="Status: Ready to process.", bg=color_container, fg=color_text)
-        status_bar_text.grid(row=0, column=0, sticky="nsw", pady=2, padx=10)
+        self.status_bar_text = tk.Label(status_bar_frame, text="Status: Ready to process.", bg=color_container, fg=color_text)
+        self.status_bar_text.grid(row=0, column=0, sticky="nsw", pady=2, padx=10)
         # Copyright text
         copyright_text = tk.Label(status_bar_frame, text="Copyright: \xa9 MouseHUB 2020.", bg=color_container, fg=color_text)
         copyright_text.grid(row=0, column=1, sticky="nes", pady=2, padx=10)
+
+    # Function to update the status text
+    def set_status(self, status):
+        self.status_bar_text.configure(text=status)
 
     # Shows the frame from frame name
     def show_frame(self, cont):
@@ -145,7 +155,8 @@ class Pages(tk.Tk):
             self.playing = None
         else:
             self.set_video_render(frame)
-            self.after(15, func = self.play_video_frame)
+            self.after(10, func = self.play_video_frame)
+            self.set_status("Processing \"" + self.playing.file + "\": " + self.playing.get_progress())
 
     # Function to set the video frame image
     def set_video_render(self, frame):
@@ -166,15 +177,24 @@ class VideoPage(tk.Frame):
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         # Videos List
-        queue_frame = tk.Frame(self, bg=color_container)
-        queue_frame.grid(row=0, column=0, sticky="nesw")
+        queue_container = tk.Frame(self, bg=color_background)
+        queue_container.grid(row=0, column=0, sticky="nesw")
+        queue_container.grid_rowconfigure(0, weight=0)
+        queue_container.grid_rowconfigure(1, weight=1)
+        queue_container.grid_columnconfigure(0, weight=1)
+        # Queue buttons
+        queue_buttons_frame = tk.Frame(queue_container, bg=color_container)
+        queue_buttons_frame.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
         # Add buttons to queue list
-        add_videos_button = tk.Button(queue_frame, image=AddVideosImage, command=import_video, bd=0, highlightthickness=0)
-        add_videos_button.grid(row=0, column=0)
-        clear_button = tk.Button(queue_frame, image=ClearImage, command=lambda: print("Clear pressed!"), bd=0, highlightthickness=0)
-        clear_button.grid(row=0, column=1)
-        process_button = tk.Button(queue_frame, image=ProcessImage, command=lambda: print("Process pressed!"), bd=0, highlightthickness=0)
-        process_button.grid(row=0, column=2)
+        add_videos_button = IconButton(queue_buttons_frame, "Add", icon_add, icon_add_active, import_video)
+        add_videos_button.grid(row=0, column=0, padx=4, pady=4)
+        clear_button = IconButton(queue_buttons_frame, "Clear", icon_delete, icon_delete_active, lambda: print("Clear pressed!"))
+        clear_button.grid(row=0, column=1, padx=4, pady=4)
+        process_button = IconButton(queue_buttons_frame, "Process", icon_process, icon_process_active, lambda: print("Process pressed!"))
+        process_button.grid(row=0, column=2, padx=4, pady=4)
+        # Queue items list
+        queue_items = VideoList(queue_container)
+        queue_items.grid(row=1, column=0, sticky="nesw")
         # Canvas for video playback
         self.VideoFrame = tk.Canvas(self, bg="black", highlightbackground=color_container)
         self.VideoFrame.grid(row=0, column=1, padx=(4, 0), sticky="nesw")
@@ -200,3 +220,50 @@ class MenuButton(tk.Button):
 
     def on_leave(self, event):
         self.configure(bg=color_container)
+
+class IconButton(tk.Button):
+    def __init__(self, parent, text, image, image_active, func):
+        tk.Button.__init__(self, parent, text=text, image=image, compound="left", command=func, bd=0, bg=color_container, fg=color_text, font=("Century Schoolbook Bold Italic", 14), padx=8, highlightthickness=0)
+        self.image = image
+        self.image_active = image_active
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, event):
+        self.configure(bg=color_hover, image=self.image_active)
+
+    def on_leave(self, event):
+        self.configure(bg=color_container, image=self.image)
+
+class VideoList(tk.Frame):
+    videos = []
+
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_rowconfigure(0, weight=1)
+        self.scrollitems = tk.Frame(self, bg=color_hover)
+        self.scrollitems.grid(row=0, column=0, sticky="nesw")
+        self.scrollitems.grid_columnconfigure(0, weight=1)
+        self.scrollbar = tk.Scrollbar(self, orient="vertical")
+        self.scrollbar.grid(row=0, column=1, sticky="nesw")
+
+    def add_videos(self, videos):
+        for video in videos:
+            self.add_video(video)
+
+    def add_video(self, video):
+        self.videos.append(video)
+        # TODO: Add video render here
+
+    def remove_video(self, video):
+        self.videos.remove(video)
+        # TODO: Remove video render here
+    
+    def clear_videos(self):
+        self.videos = []
+        # TODO: Remove all video renders here
+
+    def get_videos(self):
+        return self.videos

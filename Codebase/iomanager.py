@@ -32,7 +32,10 @@ def get_videos(multiple):
         # Select one file and return the result
         videos = [filedialog.askopenfilename(filetypes=VALID_FILES)]
     # Open the videos and return
-    return videos
+    video_inputs = []
+    for video in videos:
+        video_inputs.append(VideoInput(video))
+    return video_inputs
 
 #Function to save a *LIST* of CV2 VideoCapture objects
 def save_videos(videoCaps, outputLocation):
@@ -96,9 +99,15 @@ class VideoInput():
                 self.close()
                 return None
             # TODO: Process the frame properly here
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = PIL.Image.fromarray(frame)
             self.frames_done = self.frames_done + 1
+            self.progress = (self.frames_done / self.frames_total) * 100
             return frame
         self.close()
         return None
+    
+    def get_progress(self):
+        one_dp = "{:.1f}"
+        no_dp = "{:.0f}"
+        return "Frame " + no_dp.format(self.frames_done) + "/" + no_dp.format(self.frames_total) + "(" + one_dp.format(self.progress) + "%)"
