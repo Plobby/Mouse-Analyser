@@ -106,6 +106,9 @@ class VideoInput():
             return frame
         self.close()
         return None
+
+    def get_frame_interval(self):
+        return int(self.cap.get(cv2.CAP_PROP_FPS)) / 1000
     
     def get_progress(self):
         one_dp = "{:.1f}"

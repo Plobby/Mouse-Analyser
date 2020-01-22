@@ -45,6 +45,10 @@ def show_window():
 
 # Function to close the GUI
 def close_window():
+    global app
+    if (not app is None):
+        app.stop_video()
+        app.destroy()
     # Exits program
     raise SystemExit
 
@@ -145,18 +149,29 @@ class App(tk.Tk):
     # Function to play a video
     def play_video(self, video):
         video.open()
-        self.playing = video
-        self.play_video_frame()
+        self.playing = True
+        self.playing_video = video
+        self.playing_timer = threading.Timer(video.get_frame_interval(), self.play_video_frame)
+        self.playing_timer.start()
+
+    def pause_video(self):
+        self.playing = False
+
+    def stop_video(self):
+        self.playing = False
+        self.playing_video = None
+        if (not self.playing_timer is None):
+            self.playing_timer.cancel()
+            self.playing_timer._delete()
 
     # Function to play a frame of a video then move onto the next frame
     def play_video_frame(self):
-        frame = self.playing.get_frame()
-        if (frame is None):
-            self.playing = None
-        else:
+        frame = self.playing_video.get_frame()
+        if ((not frame is None) and self.playing):
             self.set_video_render(frame)
-            self.after(10, func = self.play_video_frame)
-            self.set_status("Processing \"" + self.playing.file + "\": " + self.playing.get_progress())
+            self.set_status("Playing \"" + self.playing_video.file + "\": " + self.playing_video.get_progress())
+            self.playing_timer = threading.Timer(self.playing_video.get_frame_interval(), self.play_video_frame)
+            self.playing_timer.start()
 
     # Function to set the video frame image
     def set_video_render(self, frame):
