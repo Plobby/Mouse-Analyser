@@ -1,5 +1,6 @@
 import cv2
 import functools
+import numpy
 
 #Implementation of Otsu's thresholding algorithm to find best threshold for a grayscale frame
 #More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html
@@ -52,12 +53,22 @@ def otsuThreshold(inpFrame):
 
 #Function to segment fore and background of a frame using threshold value
 def thresholdSegment(inpFrame, threshold):
-    #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
-    for y in range(inpFrame.shape[0]):
-        for x in range(inpFrame.shape[1]):
-            if inpFrame[y, x] < threshold:
-                inpFrame[y, x] = 255
-            else:
-                inpFrame[y, x] = 0
+    #Percentage of border to exclude (keep as black)
+    topBorderPercent = 0.2
+    sideBorderPercent = 0.1
+    #Create a copy of inpFrame to be modified
+    frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
+    frame.fill(0)
 
-    return inpFrame
+    #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
+    for y in range(int(inpFrame.shape[0] * topBorderPercent), int(inpFrame.shape[0] * (1 - topBorderPercent))):
+        for x in range(int(inpFrame.shape[1] * sideBorderPercent), int(inpFrame.shape[1] * (1 - sideBorderPercent))):
+            if inpFrame[y, x] < threshold:
+                frame[y, x] = 255
+            else:
+                frame[y, x] = 0
+
+    return frame
+
+def deNoise(currentFrame, prevFrame):
+    return None
