@@ -89,7 +89,7 @@ class VideoInput():
     frames_total = 0
     progress = 0
 
-    def __init__(self, file, queue_size=128):
+    def __init__(self, file, queue_size=64):
         self.file = file
         self.stopped = False
         self.queue = Queue(maxsize=queue_size)
@@ -108,14 +108,14 @@ class VideoInput():
         # Flag as stopped
         self.stopped = True
     
+    def close(self):
+        # Flag as stopped
+        self.stopped = True
+        self.cap.release()
+
     def update(self):
         # Loop on thread
-        while True:
-            # Await a small sleep to try desync threads
-            time.sleep(0.0001)
-            # Return if reading has been stopped
-            if (self.stopped):
-                return
+        while (not self.stopped):
             # Check the queue has space left
             if (self.queue.qsize() < self.queue_size):
                 # Read a frame from the stream
@@ -128,10 +128,10 @@ class VideoInput():
                 self.frames_done += 1
                 # Add the frame to the queue
                 self.queue.put(frame)
-
+ 
     def read(self):
         # Return next frame in queue
-        return self.queue.get()
+        return self.queue.get(False)
     
     def can_read(self):
         # Return if there is items left in the queue

@@ -1,11 +1,9 @@
 import tkinter as tk
 import iomanager
 from PIL import ImageTk, Image
-import PIL
 import cv2
 import time
-from threading import Thread
-from scheduler import Scheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Colour variables
 color_background = "#202020"
@@ -72,19 +70,11 @@ class App(tk.Tk):
         # Stop any video if playing
         if (self.video_page.video_player.playing):
             self.video_page.video_player.pause()
+            self.video_page.video_player.clear_source()
         # Destroy the tkinter window
         self.destroy()
         # Stop the application
         raise SystemExit
-
-    # Function to play a frame of a video then move onto the next frame
-    def play_video_frame(self):
-        frame = self.playing_video.get_frame()
-        if ((not frame is None) and self.playing):
-            self.set_video_render(frame)
-            self.set_status("Playing \"" + self.playing_video.file + "\": " + self.playing_video.get_progress())
-            self.playing_timer = threading.Timer(self.playing_video.get_frame_interval(), self.play_video_frame)
-            self.playing_timer.start()
 
 # - PAGE ITEMS
 class VideoPage(tk.Frame):
@@ -239,7 +229,7 @@ class VideoPlayer(tk.Frame):
     # Function to clear the video source
     def clear_source(self):
         self.source = None
-        #TODO: Close source correctly here
+        self.source_input.close()
         self.source_input = None
 
     # Function to play the video
@@ -250,17 +240,20 @@ class VideoPlayer(tk.Frame):
             self.playing = True
             # Create input stream
             self.source_input = iomanager.VideoInput(self.source)
-            self.source_input.start()
             # Run a new scheduler
-            time.sleep(0.05)
-            self.scheduler = Scheduler(self.source_input.frames_interval, self._draw_frame)
+            self.scheduler = BackgroundScheduler(daemon=True)
+            self.scheduler.add_job(self._draw_frame, 'interval', seconds=self.source_input.frames_interval, max_instances=60)
             self.scheduler.start()
+            # Start reading frames
+            self.source_input.start()
 
     # Function to pause the video
     def pause(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
             self.playing = False
+            self.scheduler.shutdown(wait=False)
+            self.scheduler.remove_all_jobs()
 
     # Function to draw a frame
     def _draw_frame(self):
@@ -271,12 +264,11 @@ class VideoPlayer(tk.Frame):
         frame = self.source_input.read()
         # Process the frame and resize correctly
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.putText(frame, "Queue Size: {}".format(self.source_input.queue.qsize()), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        frame = PIL.Image.fromarray(frame)
+        cv2.putText(frame, "Queue Size: {}".format(self.source_input.queue.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        frame = Image.fromarray(frame)
         frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
-        frame = PIL.ImageTk.PhotoImage(image=frame)
-        #self.canvas.after(0, lambda: self.canvas.configure(image=self.frame))
-        #self.canvas.configure(image=self.frame)
+        frame = ImageTk.PhotoImage(image=frame)
+        # Draw the image
         self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
         self.frame = frame
 
