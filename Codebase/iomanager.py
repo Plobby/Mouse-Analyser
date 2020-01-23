@@ -1,23 +1,26 @@
 from tkinter import filedialog
-from tkinter import Tk
-import tkinter as tk
-from PIL import ImageTk, Image
+from PIL import Image
 import PIL
-import numpy
 import cv2
 import gui
 import cli_logger
 from cli_logger import LogLevel
+from queue import Queue
+from threading import Thread
+import time
 
-# Hide the main tkinter window
-ROOT = Tk()
-ROOT.withdraw()
-
-# Create variable with allowed file types
-VALID_FILES = [("mp4 videos", "*.mp4"), ("mpeg videos", "*.mpg"), ("avi videos", "*.avi")]
+# Variables
+valid_files = [("Video Files", ("*.mp4", "*.mpg", "*.avi")), ("MP4 Videos", "*.mp4"), ("MPEG Videos", "*.mpg"), ("AVI Videos", "*.avi")]
+picker_active = False
 
 # Function to import videos
 def get_videos(multiple):
+    global picker_active
+    # Return an empty set if the picker is already active
+    if (picker_active):
+        return []
+    # Mark picker as active
+    picker_active = True
     # Prompt for a file to be selected
     cli_logger.log(LogLevel.INFO, "Please select a file to analyse!")
     # Create variable to store videos
@@ -27,15 +30,14 @@ def get_videos(multiple):
         # Inform the user multiple files are allowed
         cli_logger.log(LogLevel.INFO, "Multiple files can be selected!")
         # Select multiple files and return the result
-        videos = filedialog.askopenfilenames(filetypes=VALID_FILES)
+        videos = filedialog.askopenfilenames(filetypes=valid_files)
     else:
         # Select one file and return the result
-        videos = [filedialog.askopenfilename(filetypes=VALID_FILES)]
-    # Open the videos and return
-    video_inputs = []
-    for video in videos:
-        video_inputs.append(VideoInput(video))
-    return video_inputs
+        videos = [filedialog.askopenfilename(filetypes=valid_files)]
+    # Mark the picker as no longer active
+    picker_active = False
+    # Return the videos
+    return videos
 
 #Function to save a *LIST* of CV2 VideoCapture objects
 def save_videos(videoCaps, outputLocation):
@@ -78,39 +80,65 @@ def save_videos(videoCaps, outputLocation):
         fileIndex += 1
 
 class VideoInput():
+    cap = None
+    queue = None
+    queue_size = 128
+    stopped = False
+    frames_interval = 0
     frames_done = 0
     frames_total = 0
     progress = 0
 
-    def __init__(self, file):
+    def __init__(self, file, queue_size=128):
         self.file = file
-    
-    def open(self):
+        self.stopped = False
+        self.queue = Queue(maxsize=queue_size)
+        self.queue_size = queue_size
         self.cap = cv2.VideoCapture(self.file)
-        self.frames_total = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.frames_total = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.frames_interval = (1000 / self.cap.get(cv2.CAP_PROP_FPS)) / 1000
 
-    def close(self):
-        self.cap.release()
+    def start(self):
+        thread = Thread(target=self.update, args=())
+        thread.setDaemon(True)
+        thread.start()
+        return self
+    
+    def stop(self):
+        # Flag as stopped
+        self.stopped = True
+    
+    def update(self):
+        # Loop on thread
+        while True:
+            # Await a small sleep to try desync threads
+            time.sleep(0.0001)
+            # Return if reading has been stopped
+            if (self.stopped):
+                return
+            # Check the queue has space left
+            if (self.queue.qsize() < self.queue_size):
+                # Read a frame from the stream
+                (ret, frame) = self.cap.read()
+                # Stop if a frame was not returned
+                if (not ret):
+                    self.stop()
+                    return
+                # Increment number of frames done
+                self.frames_done += 1
+                # Add the frame to the queue
+                self.queue.put(frame)
 
-    def get_frame(self):
-        if (self.cap.isOpened()):
-            ret, frame = self.cap.read()
-            if (not ret):
-                self.close()
-                return None
-            # TODO: Process the frame properly here
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = PIL.Image.fromarray(frame)
-            self.frames_done = self.frames_done + 1
-            self.progress = (self.frames_done / self.frames_total) * 100
-            return frame
-        self.close()
-        return None
-
-    def get_frame_interval(self):
-        return int(self.cap.get(cv2.CAP_PROP_FPS)) / 1000
+    def read(self):
+        # Return next frame in queue
+        return self.queue.get()
+    
+    def can_read(self):
+        # Return if there is items left in the queue
+        return self.queue.qsize() > 0
     
     def get_progress(self):
         one_dp = "{:.1f}"
         no_dp = "{:.0f}"
+        self.progress = (self.frames_done / self.frames_total) * 100
         return "Frame " + no_dp.format(self.frames_done) + "/" + no_dp.format(self.frames_total) + "(" + one_dp.format(self.progress) + "%)"
