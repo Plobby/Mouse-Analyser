@@ -54,20 +54,17 @@ def otsuThreshold(inpFrame):
 
 """ Function to segment fore and background of a frame using threshold value """
 def thresholdSegment(inpFrame, threshold):
-    #Percentage of border to exclude (keep as black)
-    topBorderPercent = 0.2
-    sideBorderPercent = 0.1
     #Create a copy of inpFrame to be modified
     frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
     frame.fill(0)
 
     #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
-    for y in range(int(inpFrame.shape[0] * topBorderPercent), int(inpFrame.shape[0] * (1 - topBorderPercent))):
-        for x in range(int(inpFrame.shape[1] * sideBorderPercent), int(inpFrame.shape[1] * (1 - sideBorderPercent))):
-            if inpFrame[y, x] < threshold:
-                frame[y, x] = 255
+    for x in range(int(inpFrame.shape[0])):
+        for y in range(int(inpFrame.shape[1)):
+            if inpFrame[x, y] < threshold:
+                frame[x, y] = 255
             else:
-                frame[y, x] = 0
+                frame[x, y] = 0
 
     return frame
 
