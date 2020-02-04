@@ -28,7 +28,7 @@ def otsuThreshold(inpFrame):
         #Calculate mean of background pixels
         sumValues = 0
         for i in range(0, threshold):
-            sumValues = hist[i] * i
+            sumValues += hist[i] * i
 
         meanBackground = sumValues / pixelsBackground
 
@@ -37,7 +37,7 @@ def otsuThreshold(inpFrame):
         #Calculate mean of foreground pixels
         sumValues = 0
         for i in range(threshold, 256):
-            sumValues = hist[i] * i
+            sumValues += hist[i] * i
 
         meanForeground = sumValues / pixelsForeground
 
@@ -49,8 +49,8 @@ def otsuThreshold(inpFrame):
             bestThreshold = threshold
             bestBCVariance = betweenClassVariance
 
-    #Return bestThreshold with an additional weighting to reduce noise
-    return bestThreshold * 0.5
+    #Return bestThreshold
+    return bestThreshold
 
 """ Function to segment fore and background of a frame using threshold value """
 def thresholdSegment(inpFrame, threshold):
