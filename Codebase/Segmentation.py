@@ -2,15 +2,16 @@ import cv2
 import functools
 import numpy
 
-#Implementation of Otsu's thresholding algorithm to find best threshold for a grayscale frame
-#More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html
+""" Implementation of Otsu's thresholding algorithm to find best threshold for a grayscale frame
+More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html """
+
 def otsuThreshold(inpFrame):
     #Number of colour channels
     channels = 256
     #Find histogram representing inpFrame
     hist = cv2.calcHist([inpFrame.astype("float32")], [0], None, [channels], [0, 256])
     #Find total number of pixels in image
-    totalPixels = functools.reduce(lambda a, b: a + b, hist)
+    totalPixels = sum(hist)
     
     #Keep track of best threshold value and its BC Variance
     bestThreshold = 0
@@ -18,9 +19,9 @@ def otsuThreshold(inpFrame):
     #Test each possible threshold and update bestThreshold
     for threshold in range(0, channels):
         #Find total number of pixels lower than threshold
-        pixelsBackground = functools.reduce(lambda a, b: (a + b), hist[:threshold + 1])
+        pixelsBackground = sum(hist[:threshold + 1])
         #Find total number of pixels greater than threshold
-        pixelsForeground = functools.reduce(lambda a, b: (a + b), hist[threshold:])
+        pixelsForeground = sum(hist[threshold + 1:])
 
         #Calculate weight of background pixels
         weightBackground = pixelsBackground / totalPixels
@@ -51,7 +52,7 @@ def otsuThreshold(inpFrame):
     #Return bestThreshold with an additional weighting to reduce noise
     return bestThreshold * 0.5
 
-#Function to segment fore and background of a frame using threshold value
+""" Function to segment fore and background of a frame using threshold value """
 def thresholdSegment(inpFrame, threshold):
     #Percentage of border to exclude (keep as black)
     topBorderPercent = 0.2
