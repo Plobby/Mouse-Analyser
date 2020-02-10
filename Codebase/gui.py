@@ -44,7 +44,7 @@ class App(tk.Tk):
         # Configure appearance
         self.title("MouseHUB")
         self.geometry("1280x720")
-        self.minsize(720, 520)
+        self.minsize(790, 520)
         # Create frame view
         page_view = AppPageView(self)
         self.video_page = page_view.add_page(VideoPage)
@@ -52,7 +52,7 @@ class App(tk.Tk):
         self.settings_page = page_view.add_page(SettingsPage)
         # Create toolbar
         toolbar = AppToolbar(self)
-        toolbar.add_button("Video", self.video_page.tkraise)
+        toolbar.add_button("Video", self.video_page.tkraise).set_active(True)
         toolbar.add_button("Data", self.data_page.tkraise)
         toolbar.add_button("Settings", self.settings_page.tkraise)
         toolbar.add_button("Exit", self.close)
@@ -87,12 +87,9 @@ class VideoPage(tk.Frame):
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
         # Load images
-        icon_add = ImageTk.PhotoImage(file="../Assets/IconAdd.png")
-        icon_add_active = ImageTk.PhotoImage(file="../Assets/IconAddActive.png")
-        icon_delete = ImageTk.PhotoImage(file="../Assets/IconDelete.png")
-        icon_delete_active = ImageTk.PhotoImage(file="../Assets/IconDeleteActive.png")
-        icon_process = ImageTk.PhotoImage(file="../Assets/IconProcess.png")
-        icon_process_active = ImageTk.PhotoImage(file="../Assets/IconProcessActive.png")
+        button_add = ImageTk.PhotoImage(file="../Assets/ButtonAdd.png")
+        button_clear = ImageTk.PhotoImage(file="../Assets/ButtonClear.png")
+        button_process = ImageTk.PhotoImage(file="../Assets/ButtonProcess.png")
         # Configure resizing
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)
@@ -107,9 +104,9 @@ class VideoPage(tk.Frame):
         queue_buttons_frame = tk.Frame(queue_container, bg=color_container)
         queue_buttons_frame.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
         # Add buttons
-        IconButton(queue_buttons_frame, "Add", icon_add, icon_add_active, self.import_videos).grid(row=0, column=0, padx=4, pady=4)
-        IconButton(queue_buttons_frame, "Clear", icon_delete, icon_delete_active, lambda: print("Clear pressed!")).grid(row=0, column=1, padx=4, pady=4)
-        IconButton(queue_buttons_frame, "Process", icon_process, icon_process_active, lambda: print("Process pressed!")).grid(row=0, column=2, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_add, self.import_videos).grid(row=0, column=0, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_clear, self.clear_videos).grid(row=0, column=1, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_process, self.process_videos).grid(row=0, column=2, padx=4, pady=4)
         # Queue items list
         self.video_queue = VideoQueue(queue_container)
         self.video_queue.grid(row=1, column=0, sticky="nesw")
@@ -125,6 +122,14 @@ class VideoPage(tk.Frame):
             self.video_player.set_source(videos[0])
             self.video_player.play()
 
+    # Function to clear the user selected videos
+    def clear_videos(self):
+        self.video_queue.clear_videos()
+
+    # Function to process the user selected videos
+    def process_videos(self):
+        videos = self.video_queue.get_videos()
+
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Call superclass function
@@ -139,30 +144,44 @@ class SettingsPage(tk.Frame):
 
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
+    active = False
+
     def __init__(self, parent, text, func):
-        tk.Button.__init__(self, parent, text=text, command=func, bd=0, bg=color_container, fg=color_text, font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
+        self.tab = ImageTk.PhotoImage(file="../Assets/Tab.png")
+        self.tab_active = ImageTk.PhotoImage(file="../Assets/TabActive.png")
+        tk.Button.__init__(self, parent, image=self.tab, text=text, compound="center", command=func, bd=0, bg=color_container, activebackground=color_container, fg=color_text, font=("Rockwell", 16), pady=0, highlightthickness=0)
+        
         self.bind("<Enter>", self.on_enter)
         self.bind("<Leave>", self.on_leave)
 
     def on_enter(self, event):
-        self.configure(bg=color_hover)
+        if (not self.active):
+            self.configure(image=self.tab_active)
 
     def on_leave(self, event):
-        self.configure(bg=color_container)
+        if (not self.active):
+            self.configure(image=self.tab)
+
+    def set_active(self, state):
+        self.active = state
+        if (self.active):
+            self.configure(image=self.tab_active)
+        else:
+            self.configure(image=self.tab)
 
 class IconButton(tk.Button):
-    def __init__(self, parent, text, image, image_active, func):
-        tk.Button.__init__(self, parent, text=text, image=image, compound="left", command=func, bd=0, bg=color_container, fg=color_text, font=("Century Schoolbook Bold Italic", 14), padx=8, highlightthickness=0)
+    def __init__(self, parent, image, func):
+        tk.Button.__init__(self, parent, image=image, compound="left", command=func, bd=0, bg=color_container, activebackground=color_container, padx=8, highlightthickness=0)
         self.image = image
-        self.image_active = image_active
-        self.bind("<Enter>", self.on_enter)
-        self.bind("<Leave>", self.on_leave)
+        #self.image_active = image_active
+        #self.bind("<Enter>", self.on_enter)
+        #self.bind("<Leave>", self.on_leave)
 
     def on_enter(self, event):
-        self.configure(bg=color_hover, image=self.image_active)
+        self.configure(image=self.image)
 
     def on_leave(self, event):
-        self.configure(bg=color_container, image=self.image)
+        self.configure(image=self.image)
 
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
@@ -208,12 +227,15 @@ class VideoPlayer(tk.Frame):
     frame = None
     playing = False
     scheduler = None
+    controls_frame = None
+    controls_play = None
 
     # Constructor
     def __init__(self, parent):
         # Call superclass constructor
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
         self.grid_columnconfigure(0, weight=1)
         # Create canvas
         self.canvas = tk.Canvas(self, bg="black", highlightbackground=color_container)
@@ -221,6 +243,11 @@ class VideoPlayer(tk.Frame):
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
         self.canvas.bind("<Configure>", self.on_resize)
+        # Create player bar
+        self.controls_frame = tk.Frame(self, bg=color_background)
+        self.controls_frame.grid(row=1, column=0, sticky="nesw", padx=10, pady=8)
+        self.controls_play = tk.Button(self.controls_frame, bg="blue", text="TEST!")
+        self.controls_play.grid(row=0, column=0, sticky="nesw")
 
     # Function to set the video source
     def set_source(self, video):
@@ -301,11 +328,23 @@ class AppToolbar(tk.Frame):
         tk.Label(self, image=self.image_title, bd=0, bg=color_container, highlightthickness=0).grid(row=0, column=0, padx=10, sticky="nsw")
         # Frame for the buttons
         self.button_frame = tk.Frame(self, bg=color_container)
-        self.button_frame.grid(row=0, column=1, padx=4, pady=11, sticky="e")
+        self.button_frame.grid(row=0, column=1, padx=4, pady=(11, 0), sticky="es")
+
+    # Function for when a button is clicked
+    def button_click(self, item, callback):
+        # Change active button
+        for btn in self.buttons:
+            if (btn == item):
+                btn.set_active(True)
+            else:
+                btn.set_active(False)
+        # Call button callback function
+        callback()
 
     # Function to add a button to the toolbar
     def add_button(self, text, callback):
-        btn = MenuButton(self.button_frame, text, callback).grid(row=0, column=len(self.buttons), padx=4)
+        btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback))
+        btn.grid(row=0, column=len(self.buttons), padx=4)
         self.buttons.append(btn)
         return btn
 
