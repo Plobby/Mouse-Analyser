@@ -36,6 +36,13 @@ light_color_text = "#009696"
 
 currentThemeIndex = 0
 
+# Dictionaries to store the hex values for easy storage
+
+themeBackDict = {"Dark":default_color_background, "Debug":debug_color_background,"Light":light_color_background}
+themeHoverDict = {"Dark":default_color_hover, "Debug":debug_color_hover,"Light":light_color_hover}
+themeContainerDict = {"Dark":default_color_container, "Debug":debug_container,"Light":light_color_container}
+themeTextDict = {"Dark":default_color_text, "Debug":debug_color_text,"Light":light_color_text}
+
 # Setting default colours
 color_background = debug_color_background
 color_hover = debug_color_hover
@@ -219,6 +226,8 @@ class SettingsPage(tk.Frame):
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
 
+        self.largerThanLife = parent
+
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self,bg=color_background)
         settings_frame.grid(row=0,column=1,sticky="nesw")
@@ -228,9 +237,9 @@ class SettingsPage(tk.Frame):
         self.change_theme_button.grid(row=0,column=0,pady=4)
 
     def rotateTheme(self):
-        global currentThemeIndex
+        global currentThemeIndex, themeBackDict, themeContainerDict, themeHoverDict, themeTextDict
         # Creating a dict to store all the themes in.
-        self.themeList = ["Theme: Dark","Theme: Light","Theme: Debug"]
+        self.themeList = ["Dark","Light","Debug"]
 
         print("ROTATE RUNNING")
         if (currentThemeIndex < 2):
@@ -238,7 +247,24 @@ class SettingsPage(tk.Frame):
         else:
             currentThemeIndex = 0
 
-        self.change_theme_button.config(text=self.themeList[currentThemeIndex])
+        # Change the word written in the button to the next value.
+        self.change_theme_button.config(text="Theme: "+self.themeList[currentThemeIndex])
+
+        color_background = themeBackDict[self.themeList[currentThemeIndex]]
+        color_hover = themeHoverDict[self.themeList[currentThemeIndex]]
+        color_container = themeContainerDict[self.themeList[currentThemeIndex]]
+        color_text = themeTextDict[self.themeList[currentThemeIndex]]
+
+        # For every widget in the parent (aka the whole interface)...
+        for widget in self.largerThanLife.winfo_children():
+            widget.configure(bg=themeBackDict[self.themeList[currentThemeIndex]])
+            #widget.configure(fg=themeTextDict[self.themeList[currentThemeIndex]])
+            widget.configure()
+            if (type(widget)==MenuButton):
+                print("MenuButton found!")
+                #widget.reConfigure(themeBackDict[self.themeList[currentThemeIndex]],themeTextDict[self.themeList[currentThemeIndex]])
+            if (type(widget)==tk.Frame):
+                widget.configure(bg=themeContainerDict[self.themeList[currentThemeIndex]])
 
 
 class MenuButton(tk.Button):
@@ -252,3 +278,6 @@ class MenuButton(tk.Button):
 
     def on_leave(self, event):
         self.configure(bg=color_container)
+
+    def reConfigure(newBG, newFontColor):
+        self.config(bg=newBG, fg=newFontColor)
