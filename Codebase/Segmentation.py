@@ -50,7 +50,7 @@ def otsuThreshold(inpFrame):
             bestBCVariance = betweenClassVariance
 
     #Return bestThreshold
-    return bestThreshold
+    return bestThreshold * 0.5
 
 """ Function to segment fore and background of a frame using threshold value """
 def thresholdSegment(inpFrame, threshold):
@@ -60,7 +60,7 @@ def thresholdSegment(inpFrame, threshold):
 
     #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
     for x in range(int(inpFrame.shape[0])):
-        for y in range(int(inpFrame.shape[1)):
+        for y in range(int(inpFrame.shape[1])):
             if inpFrame[x, y] < threshold:
                 frame[x, y] = 255
             else:
