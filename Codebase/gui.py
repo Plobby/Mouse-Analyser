@@ -1,8 +1,10 @@
 import tkinter as tk
 import iomanager
 from PIL import ImageTk, Image
-import cv2
+import cv2 as cv2
 import time
+import threading
+from queue import Queue, Empty
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # Colour variables
@@ -44,7 +46,7 @@ class App(tk.Tk):
         # Configure appearance
         self.title("MouseHUB")
         self.geometry("1280x720")
-        self.minsize(790, 520)
+        self.minsize(780, 520)
         # Create frame view
         page_view = AppPageView(self)
         self.video_page = page_view.add_page(VideoPage)
@@ -69,8 +71,7 @@ class App(tk.Tk):
     def close(self):
         # Stop any video if playing
         if (self.video_page.video_player.playing):
-            self.video_page.video_player.pause()
-            self.video_page.video_player.clear_source()
+            self.video_page.video_player.stop()
         # Destroy the tkinter window
         self.destroy()
         # Stop the application
@@ -229,9 +230,22 @@ class VideoPlayer(tk.Frame):
     scheduler = None
     controls_frame = None
     controls_play = None
+    play_image = None
+    play_image_hover = None
+    pause_image = None
+    pause_image_hover = None
+
+    buffer = None
 
     # Constructor
     def __init__(self, parent):
+        # Create read buffer
+        self.buffer = Queue(maxsize=128)
+        # Load images
+        self.play_image = ImageTk.PhotoImage(file="../Assets/ButtonPlay.png")
+        self.play_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPlayHover.png")
+        self.pause_image = ImageTk.PhotoImage(file="../Assets/ButtonPause.png")
+        self.pause_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPauseHover.png")
         # Call superclass constructor
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid_rowconfigure(0, weight=1)
@@ -246,8 +260,28 @@ class VideoPlayer(tk.Frame):
         # Create player bar
         self.controls_frame = tk.Frame(self, bg=color_background)
         self.controls_frame.grid(row=1, column=0, sticky="nesw", padx=10, pady=8)
-        self.controls_play = tk.Button(self.controls_frame, bg="blue", text="TEST!")
-        self.controls_play.grid(row=0, column=0, sticky="nesw")
+        self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_play = tk.Button(self.controls_frame, bd=0, bg=color_background, activebackground=color_background, image=self.play_image, command=self.toggle)
+        self.controls_play.grid(row=0, column=0, sticky="ns")
+        # Bind hover events
+        self.controls_play.bind("<Enter>", self.play_hover)
+        self.controls_play.bind("<Leave>", self.play_leave)
+
+    # Function for when the mouse starts hovering the play button
+    def play_hover(self, event):
+        # Check if the video is playing
+        if (self.playing):
+            self.controls_play.configure(image=self.pause_image_hover)
+        else:
+            self.controls_play.configure(image=self.play_image_hover)
+
+    # Function for when the mouse stops hovering the play button
+    def play_leave(self, event):
+        # Check if the video is playing
+        if (self.playing):
+            self.controls_play.configure(image=self.pause_image)
+        else:
+            self.controls_play.configure(image=self.play_image)
 
     # Function to set the video source
     def set_source(self, video):
@@ -259,6 +293,22 @@ class VideoPlayer(tk.Frame):
         self.source_input.close()
         self.source_input = None
 
+    # Function to toggle the video playing state
+    def toggle(self):
+        # Check a source is present
+        if (not self.source is None):
+            # Check if playing
+            if (self.playing):
+                # Stop playing
+                self.pause()
+                # Update button state
+                self.controls_play.configure(image=self.pause_image_hover)
+            else:
+                # Start playing
+                self.play()
+                # Update button state
+                self.controls_play.configure(image=self.play_image_hover)
+
     # Function to play the video
     def play(self):
         # Check a source is present
@@ -266,38 +316,51 @@ class VideoPlayer(tk.Frame):
             # Mark as playing
             self.playing = True
             # Create input stream
-            self.source_input = iomanager.VideoInput(self.source)
-            # Run a new scheduler
-            self.scheduler = BackgroundScheduler(daemon=True)
-            self.scheduler.add_job(self._draw_frame, 'interval', seconds=self.source_input.frames_interval, max_instances=60)
-            self.scheduler.start()
+            if (self.source_input is None):
+                self.source_input = iomanager.VideoInput(self.source)
             # Start reading frames
-            self.source_input.start()
+            self.source_input.start(self.buffer)
+            # Run a new scheduler
+            if (self.scheduler is None):
+                self.scheduler = BackgroundScheduler(daemon=True)
+                self.scheduler.start()
+            self.scheduler.add_job(self._draw_frame, 'interval', args=[self.buffer], seconds=self.source_input.frames_interval, max_instances=60)
 
     # Function to pause the video
     def pause(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
             self.playing = False
-            self.scheduler.shutdown(wait=False)
             self.scheduler.remove_all_jobs()
 
+    # Function to stop the video
+    def stop(self):
+        # Check a source is present
+        if (not self.source is None and not self.source_input is None):
+            self.playing = False
+            self.scheduler.shutdown(wait=False)
+            self.scheduler.remove_all_jobs()
+            self.source = None
+            self.source_input = None
+
     # Function to draw a frame
-    def _draw_frame(self):
-        # Return if no frame is ready to be read
-        if (not self.source_input.can_read()):
-            return
+    def _draw_frame(self, target):
         # Get the next frame
-        frame = self.source_input.read()
-        # Process the frame and resize correctly
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.putText(frame, "Queue Size: {}".format(self.source_input.queue.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        frame = Image.fromarray(frame)
-        frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
-        frame = ImageTk.PhotoImage(image=frame)
-        # Draw the image
-        self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
-        self.frame = frame
+        try:
+            # Get the frame
+            frame = target.get(block=False)
+            # Process the frame and resize correctly
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            cv2.putText(frame, "Queue Size: {}".format(target.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            frame = Image.fromarray(frame)
+            frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
+            frame = ImageTk.PhotoImage(image=frame)
+            # Draw the image
+            self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
+            self.frame = frame
+        except:
+            # Return - no frame found
+            return
 
     # Function to handle frame resizing
     def on_resize(self, event):
@@ -325,7 +388,7 @@ class AppToolbar(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         # Add title and spacing container
-        tk.Label(self, image=self.image_title, bd=0, bg=color_container, highlightthickness=0).grid(row=0, column=0, padx=10, sticky="nsw")
+        tk.Label(self, image=self.image_title, bd=0, bg=color_container, highlightthickness=0).grid(row=0, column=0, sticky="nsw")
         # Frame for the buttons
         self.button_frame = tk.Frame(self, bg=color_container)
         self.button_frame.grid(row=0, column=1, padx=4, pady=(11, 0), sticky="es")

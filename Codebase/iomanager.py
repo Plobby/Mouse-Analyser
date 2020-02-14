@@ -81,26 +81,23 @@ def save_videos(videoCaps, outputLocation):
 
 class VideoInput():
     cap = None
-    queue = None
-    queue_size = 128
+    queue_size = None
     stopped = False
     frames_interval = 0
     frames_done = 0
     frames_total = 0
     progress = 0
 
-    def __init__(self, file, queue_size=64):
+    def __init__(self, file, queue_size=128):
         self.file = file
         self.stopped = False
-        self.queue = Queue(maxsize=queue_size)
         self.queue_size = queue_size
         self.cap = cv2.VideoCapture(self.file)
         self.frames_total = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.frames_interval = (1000 / self.cap.get(cv2.CAP_PROP_FPS)) / 1000
 
-    def start(self):
-        thread = Thread(target=self.update, args=())
-        thread.setDaemon(True)
+    def start(self, target):
+        thread = Thread(target=self.update, daemon=True, args=[target])
         thread.start()
         return self
     
@@ -113,11 +110,12 @@ class VideoInput():
         self.stopped = True
         self.cap.release()
 
-    def update(self):
+    def update(self, target):
         # Loop on thread
         while (not self.stopped):
+            #print(target.qsize())
             # Check the queue has space left
-            if (self.queue.qsize() < self.queue_size):
+            if (target.qsize() < self.queue_size):
                 # Read a frame from the stream
                 (ret, frame) = self.cap.read()
                 # Stop if a frame was not returned
@@ -127,15 +125,8 @@ class VideoInput():
                 # Increment number of frames done
                 self.frames_done += 1
                 # Add the frame to the queue
-                self.queue.put(frame)
- 
-    def read(self):
-        # Return next frame in queue
-        return self.queue.get(False)
-    
-    def can_read(self):
-        # Return if there is items left in the queue
-        return self.queue.qsize() > 0
+                target.put(frame, block=False)
+        print("Finished!")
     
     def get_progress(self):
         one_dp = "{:.1f}"
