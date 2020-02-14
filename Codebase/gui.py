@@ -66,7 +66,7 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.close)
         # Start the main app loop
         self.mainloop()
-    
+
     # Function to close the window
     def close(self):
         # Stop any video if playing
@@ -114,7 +114,7 @@ class VideoPage(tk.Frame):
         # Video player
         self.video_player = VideoPlayer(self)
         self.video_player.grid(row=0, column=1, padx=(4, 0), sticky="nesw")
-    
+
     # Function to allow the user to select and import videos
     def import_videos(self):
         videos = iomanager.get_videos(True)
@@ -143,6 +143,18 @@ class SettingsPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
 
+tkvar = tk.StringVar(load)
+choices = { 'dark','light','debug'}
+tkvar.set('dark') # set the default option
+popupMenu = tk.OptionMenu(load, tkvar, *choices)
+# popupMenu.place(x=260,y=95)
+
+def settingsReply():
+    print("This works")
+
+button = tk.Button(text="Generate", font=40, command=settingsReply)
+button.place(x=230, y=380)
+
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
@@ -151,7 +163,7 @@ class MenuButton(tk.Button):
         self.tab = ImageTk.PhotoImage(file="../Assets/Tab.png")
         self.tab_active = ImageTk.PhotoImage(file="../Assets/TabActive.png")
         tk.Button.__init__(self, parent, image=self.tab, text=text, compound="center", command=func, bd=0, bg=color_container, activebackground=color_container, fg=color_text, font=("Rockwell", 16), pady=0, highlightthickness=0)
-        
+
         self.bind("<Enter>", self.on_enter)
         self.bind("<Leave>", self.on_leave)
 
@@ -210,7 +222,7 @@ class VideoQueue(tk.Frame):
     def remove_video(self, video):
         self.videos.remove(video)
         # TODO: Remove video render here
-    
+
     def clear_videos(self):
         self.videos = []
         # TODO: Remove all video renders here
@@ -429,7 +441,7 @@ class AppPageView(tk.Frame):
         self.grid(column=0, row=1, sticky="nesw")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-    
+
     # Function to add a page to the view
     def add_page(self, pagetype):
         page = pagetype(self)
@@ -453,7 +465,7 @@ class AppStatusBar(tk.Frame):
         self.status_label.grid(row=0, column=0, sticky="nsw", pady=2, padx=10)
         # Copyright text
         tk.Label(self, text=copyright, bg=color_container, fg=color_text).grid(row=0, column=1, sticky="nes", pady=2, padx=10)
-    
+
     # Function to update the status
     def set_status(self, status):
         self.status_label.configure(text="Status: " + str(status))
