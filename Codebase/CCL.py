@@ -16,9 +16,9 @@ def CCL(inpFrame):
 
     #Continually look for and explore new objects in the frame
     while True:
-        #Create list to contain coordinate tuples of all currently labelled pixels
+        #Create list to contain coordinates of all explored objects
         labelled = []
-        #Populate list with coordinates of all pixels in all objects
+        #Populate list with coordinates of all pixels in all objects that have already been explored
         for key in objects.keys():
             for coord in objects[key]:
                 labelled.append(coord)
@@ -43,9 +43,6 @@ def CCL(inpFrame):
     #Return objects dictionary containing all objects found in a frame
     return objects
 
-
-
-
 """Function to iterate over image until an un-labelled foreground pixel is found"""
 def findNewObject(inpFrame, labelled):
     #Iterate over the image until a foreground pixel is found
@@ -69,42 +66,40 @@ def exploreObject(inpFrame, startPixel):
     searchQueue = deque()
     #Enqueue the startPixel coordinates
     searchQueue.append(startPixel)
-    #List of tuples containing coordinates of new object's pixels
+    #List containing coordinates of new object's pixels
     newObjectCoords = []
 
-    #Continually explore neighbouring pixels until no new (unlabelled) pixels are found
+    #Continually explore neighbouring pixels until no new unexplored pixels are found
     while len(searchQueue) > 0:
         #Pop pixel to be explored from searchQueue
         pixel = searchQueue.popleft()
         #Add pixel to newObjectCoords
         newObjectCoords.append(pixel)
 
-        """Error is in the following section, never entering the second condition for all four parts"""
-
         #Search above (if available)
         if pixel[0] > 0:
-            #Check if pixel above is foreground and unlabelled and not already been explored for this object
+            #Check if pixel above is foreground and has not already been explored for this object
             if (inpFrame[pixel[0] - 1, pixel[1]] == 255) and ((pixel[0] - 1, pixel[1]) not in newObjectCoords):
                 #Add pixel above to searchQueue
                 searchQueue.append((pixel[0] - 1, pixel[1]))
 
         #Search right (if available)
         if pixel[1] < len(inpFrame[1]) - 1:
-            #Check if pixel right is foreground and unlabelled and not already been explored for this object
+            #Check if pixel right is foreground and has not already been explored for this object
             if (inpFrame[pixel[0], pixel[1] + 1] == 255) and ((pixel[0], pixel[1] + 1) not in newObjectCoords):
                 #Add pixel right to searchQueue
                 searchQueue.append((pixel[0], pixel[1] + 1))
 
         #Search below (if available)
         if pixel[0] < len(inpFrame) - 1:
-            #Check if pixel below is foreground and unlabelled and not already been explored for this object
+            #Check if pixel below is foreground and has not already been explored for this object
             if (inpFrame[pixel[0] + 1, pixel[1]] == 255) and ((pixel[0] + 1, pixel[1]) not in newObjectCoords):
                 #Add pixel below to searchQueue
                 searchQueue.append((pixel[0] + 1, pixel[1]))
 
         #Search left (if available)
         if pixel[1] > 0:
-            #Check if pixel left is foreground and unlabelled and not already been explored for this object
+            #Check if pixel left is foreground and has not already been explored for this object
             if (inpFrame[pixel[0], pixel[1] - 1] == 255) and ((pixel[0], pixel[1] - 1) not in newObjectCoords):
                 #Add pixel left to searchQueue
                 searchQueue.append((pixel[0], pixel[1] - 1))
