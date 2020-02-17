@@ -109,7 +109,7 @@ class VideoInput():
         # Flag as stopped
         self.stopped = True
         self.cap.release()
-
+    
     def update(self, target):
         # Loop on thread
         while (not self.stopped):
