@@ -154,7 +154,7 @@ class SettingsPage(tk.Frame):
         tkvar.set('Dark') # set the default option
 
         popupMenu = tk.OptionMenu(settings_frame, tkvar, *choices)
-        tk.Label(settings_frame, text="Choose a theme!").grid(row = 1, column = 1)
+        tk.Label(settings_frame,bg=color_background, fg=color_text, text="Choose a theme!").grid(row = 1, column = 1)
         popupMenu.grid(row = 2, column =1)
 
         # on change dropdown value
