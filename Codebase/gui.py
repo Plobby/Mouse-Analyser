@@ -165,13 +165,6 @@ class SettingsPage(tk.Frame):
         # link function to change dropdown
         tkvar.trace('w', change_dropdown)
 
-def settingsReply():
-    print("This works")
-    
-
-button = tk.Button(text="Generate", font=40, command=settingsReply)
-button.place(x=230, y=380)
-
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
