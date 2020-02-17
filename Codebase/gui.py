@@ -4,6 +4,7 @@ import threading
 from PIL import ImageTk, Image
 import PIL
 import cv2
+import sys
 
 # Load images
 AddVideosImage = ImageTk.PhotoImage(Image.open("../Assets/AddVideosButton.jpg"))
@@ -16,7 +17,54 @@ image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
 # This section has a few sections of custom colours for users to select from, before setting colours to the default at the end.
 ##################
 
+# Creating a simple class for themes to be stored in.
+
+class Theme:
+    def __init__(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self._name = name
+        self._bgcolor = bgcolor
+        self._hvrcolor = hvrcolor
+        self._cntrcolor = cntrcolor
+        self._txtcolor = txtcolor
+
+    def title(self):
+        return self._name
+
+    def background(self):
+        return self._bgcolor
+
+    def hover(self):
+        return self._hvrcolor
+
+    def container(self):
+        return self._cntrcolor
+
+    def text(self):
+        return self._txtcolor
+
+    def changeTheme(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self.__init__(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor)
+
+
+# Open the settings file and load the last used/default theme.
+
+def getLastTheme():
+    settingsFile = open('../settings.txt', 'r+')
+    settings = []
+    line = ""
+
+    for line in settingsFile:
+        settings.append(line.strip('\n'))
+    settingsFile.close()
+
+    return settings
+
+settings = getLastTheme()
+
 # Default Colour variables
+
+currentTheme = Theme(settings[0],settings[1],settings[2],settings[3],settings[4])
+
 default_color_background = "#202020"
 default_color_hover = "#2B2B2B"
 default_color_container = "#383838"
@@ -74,6 +122,7 @@ def show_window():
 def close_window():
     # Exits program
     raise SystemExit
+    sys.exit()
 
 # Pages Code From = https://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter/7557028#7557028
 class Pages(tk.Tk):
@@ -281,3 +330,7 @@ class MenuButton(tk.Button):
 
     def reConfigure(newBG, newFontColor):
         self.config(bg=newBG, fg=newFontColor)
+
+
+if __name__ == "__main__":
+    print(defaultTheme.name)
