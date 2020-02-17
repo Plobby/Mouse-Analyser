@@ -97,6 +97,13 @@ class VideoInput():
         self.frames_interval = (1000 / self.cap.get(cv2.CAP_PROP_FPS)) / 1000
 
     def start(self, target):
+        # Flag as not stopped
+        self.stopped = False
+        # Create new capture object
+        self.cap = cv2.VideoCapture(self.file)
+        # Set current frame
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frames_done)
+        # Start reading frames
         thread = Thread(target=self.update, daemon=True, args=[target])
         thread.start()
         return self
@@ -113,7 +120,6 @@ class VideoInput():
     def update(self, target):
         # Loop on thread
         while (not self.stopped):
-            #print(target.qsize())
             # Check the queue has space left
             if (target.qsize() < self.queue_size):
                 # Read a frame from the stream
@@ -126,7 +132,11 @@ class VideoInput():
                 self.frames_done += 1
                 # Add the frame to the queue
                 target.put(frame, block=False)
-        print("Finished!")
+                # Wait small delay
+                time.sleep(0.0002)
+        # Release capture object
+        self.cap.release()
+        self.cap = None
     
     def get_progress(self):
         one_dp = "{:.1f}"

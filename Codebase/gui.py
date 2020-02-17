@@ -3,9 +3,9 @@ import iomanager
 from PIL import ImageTk, Image
 import cv2 as cv2
 import time
-import threading
+
+from threading import Timer
 from queue import Queue, Empty
-from apscheduler.schedulers.background import BackgroundScheduler
 
 # Colour variables
 color_background = "#202020"
@@ -333,38 +333,42 @@ class VideoPlayer(tk.Frame):
                 self.source_input = iomanager.VideoInput(self.source)
             # Start reading frames
             self.source_input.start(self.buffer)
-            # Run a new scheduler
-            if (self.scheduler is None):
-                self.scheduler = BackgroundScheduler(daemon=True)
-                self.scheduler.start()
-            self.scheduler.add_job(self._draw_frame, 'interval', args=[self.buffer], seconds=self.source_input.frames_interval, max_instances=60)
-
+            # Run timer to play frames
+            timer = Timer(interval=self.source_input.frames_interval, function=self._draw_frame, args=[self.buffer])
+            timer.daemon = True
+            timer.start()
+    
     # Function to pause the video
     def pause(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
             self.playing = False
-            self.scheduler.remove_all_jobs()
+            self.source_input.stop()
 
     # Function to stop the video
     def stop(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
             self.playing = False
-            self.scheduler.shutdown(wait=False)
-            self.scheduler.remove_all_jobs()
             self.source = None
             self.source_input = None
 
     # Function to draw a frame
     def _draw_frame(self, target):
+        # Return if not playing
+        if (not self.playing):
+            return
         # Get the next frame
         try:
+            # Call next frame draw
+            timer = Timer(interval=self.source_input.frames_interval, function=self._draw_frame, args=[self.buffer])
+            timer.daemon = True
+            timer.start()
             # Get the frame
             frame = target.get(block=False)
             # Process the frame and resize correctly
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            cv2.putText(frame, "Queue Size: {}".format(target.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            #cv2.putText(frame, "Queue Size: {}".format(target.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             frame = Image.fromarray(frame)
             frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
             frame = ImageTk.PhotoImage(image=frame)
