@@ -8,13 +8,15 @@ import cv2
 import gui
 import cli_logger
 from cli_logger import LogLevel
+import Segmentation
+import CCL
 
 # Hide the main tkinter window
 ROOT = Tk()
 ROOT.withdraw()
 
 # Create variable with allowed file types
-VALID_FILES = [("mp4 videos", "*.mp4"), ("mpeg videos", "*.mpg"), ("avi videos", "*.avi")]
+VALID_FILES = [("mpeg videos", "*.mpg"), ("mp4 videos", "*.mp4"), ("avi videos", "*.avi")]
 
 # Function to import videos
 def get_videos(multiple):
@@ -88,7 +90,7 @@ class VideoInput():
 
     def close(self):
         self.cap.release()
-
+    
     def get_frame(self):
         if (self.cap.isOpened()):
             ret, frame = self.cap.read()
@@ -97,6 +99,7 @@ class VideoInput():
                 return None
             # TODO: Process the frame properly here
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = Segmentation.thresholdSegment(frame, Segmentation.otsuThreshold(frame))
             frame = PIL.Image.fromarray(frame)
             self.frames_done = self.frames_done + 1
             return frame
