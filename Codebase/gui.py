@@ -137,19 +137,36 @@ class DataPage(tk.Frame):
         self.grid(row=0, column=0, sticky="nesw")
 
 class SettingsPage(tk.Frame):
-    def __init__(self, parent):
-        # Call superclass function
-        tk.Frame.__init__(self, parent)
+    def __init__(self,parent):
+        tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
+ #Configuring rows
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(2, weight=1)
 
-tkvar = tk.StringVar(load)
-choices = { 'dark','light','debug'}
-tkvar.set('dark') # set the default option
-popupMenu = tk.OptionMenu(load, tkvar, *choices)
-# popupMenu.place(x=260,y=95)
+        # Creating a frame to put all the buttons in.
+        settings_frame = tk.Frame(self,bg=color_background)
+        settings_frame.grid(row=0,column=1,sticky="nesw")
+        tkvar = tk.StringVar(load)
+        # Dictionary with options
+        choices = { 'Dark','Light','Debug'}
+        tkvar.set('Dark') # set the default option
+
+        popupMenu = tk.OptionMenu(settings_frame, tkvar, *choices)
+        tk.Label(settings_frame, text="Choose a theme!").grid(row = 1, column = 1)
+        popupMenu.grid(row = 2, column =1)
+
+        # on change dropdown value
+        def change_dropdown(*args):
+            print( tkvar.get() )
+
+        # link function to change dropdown
+        tkvar.trace('w', change_dropdown)
 
 def settingsReply():
     print("This works")
+    
 
 button = tk.Button(text="Generate", font=40, command=settingsReply)
 button.place(x=230, y=380)
