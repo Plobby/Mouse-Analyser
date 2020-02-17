@@ -186,15 +186,6 @@ class IconButton(tk.Button):
     def __init__(self, parent, image, func):
         tk.Button.__init__(self, parent, image=image, compound="left", command=func, bd=0, bg=color_container, activebackground=color_container, padx=8, highlightthickness=0)
         self.image = image
-        #self.image_active = image_active
-        #self.bind("<Enter>", self.on_enter)
-        #self.bind("<Leave>", self.on_leave)
-
-    def on_enter(self, event):
-        self.configure(image=self.image)
-
-    def on_leave(self, event):
-        self.configure(image=self.image)
 
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
