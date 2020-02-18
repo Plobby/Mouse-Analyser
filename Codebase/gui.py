@@ -6,7 +6,54 @@ import time
 from threading import Timer
 from queue import Queue, Empty
 
+# Creating a simple class for themes to be stored in.
+
+class Theme:
+    def __init__(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self._name = name
+        self._bgcolor = bgcolor
+        self._hvrcolor = hvrcolor
+        self._cntrcolor = cntrcolor
+        self._txtcolor = txtcolor
+
+    def title(self):
+        return self._name
+
+    def background(self):
+        return self._bgcolor
+
+    def hover(self):
+        return self._hvrcolor
+
+    def container(self):
+        return self._cntrcolor
+
+    def text(self):
+        return self._txtcolor
+
+    def changeTheme(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self.__init__(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor)
+
+
+# Open the settings file and load the last used/default theme.
+
+def getLastTheme():
+    settingsFile = open('../settings.txt', 'r+')
+    settings = []
+    line = ""
+
+    for line in settingsFile:
+        settings.append(line.strip('\n'))
+    settingsFile.close()
+
+    return settings
+
+settings = getLastTheme()
+
 # Default Colour variables
+
+currentTheme = Theme(settings[0],settings[1],settings[2],settings[3],settings[4])
+
 default_color_background = "#202020"
 default_color_hover = "#2B2B2B"
 default_color_container = "#383838"
@@ -26,11 +73,18 @@ light_color_text = "#009696"
 
 current_theme_index = 0
 
+# Dictionaries to store the hex values for easy storage
+
+themeBackDict = {"Dark":default_color_background, "Debug":debug_color_background,"Light":light_color_background}
+themeHoverDict = {"Dark":default_color_hover, "Debug":debug_color_hover,"Light":light_color_hover}
+themeContainerDict = {"Dark":default_color_container, "Debug":debug_container,"Light":light_color_container}
+themeTextDict = {"Dark":default_color_text, "Debug":debug_color_text,"Light":light_color_text}
+
 # Setting default colours
-color_background = default_color_background
-color_hover = default_color_hover
-color_container = default_color_container
-color_text = default_color_text
+color_background = currentTheme.background()
+color_hover = currentTheme.hover()
+color_container = currentTheme.container()
+color_text = currentTheme.text()
 
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
@@ -166,6 +220,8 @@ class SettingsPage(tk.Frame):
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
 
+        self.largerThanLife = parent
+
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self,bg=color_background)
         settings_frame.grid(row=0,column=1,sticky="nesw")
@@ -186,14 +242,33 @@ class SettingsPage(tk.Frame):
         popupMenu.grid(row = 2, column =1)
 
     def rotate_theme(self):
-        global current_theme_index
+        global currentThemeIndex, themeBackDict, themeContainerDict, themeHoverDict, themeTextDict
         # Creating a dict to store all the themes in.
         self.theme_list = ["Theme: Dark","Theme: Light","Theme: Debug"]
 
         if (current_theme_index < 2):
             current_theme_index += 1
         else:
-            current_theme_index = 0
+            currentThemeIndex = 0
+            
+        # Change the word written in the button to the next value.
+        self.change_theme_button.config(text="Theme: "+self.themeList[currentThemeIndex])
+
+        color_background = themeBackDict[self.themeList[currentThemeIndex]]
+        color_hover = themeHoverDict[self.themeList[currentThemeIndex]]
+        color_container = themeContainerDict[self.themeList[currentThemeIndex]]
+        color_text = themeTextDict[self.themeList[currentThemeIndex]]
+
+        # For every widget in the parent (aka the whole interface)...
+        for widget in self.largerThanLife.winfo_children():
+            widget.configure(bg=themeBackDict[self.themeList[currentThemeIndex]])
+            #widget.configure(fg=themeTextDict[self.themeList[currentThemeIndex]])
+            widget.configure()
+            if (type(widget)==MenuButton):
+                print("MenuButton found!")
+                #widget.reConfigure(themeBackDict[self.themeList[currentThemeIndex]],themeTextDict[self.themeList[currentThemeIndex]])
+            if (type(widget)==tk.Frame):
+                widget.configure(bg=themeContainerDict[self.themeList[currentThemeIndex]])
 
         self.change_theme_button.config(text=self.theme_list[current_theme_index])
         
@@ -220,7 +295,10 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-
+    
+    def reConfigure(newBG, newFontColor):
+        self.config(bg=newBG, fg=newFontColor)
+    
     def set_active(self, state):
         self.active = state
         if (self.active):
@@ -515,3 +593,6 @@ class AppStatusBar(tk.Frame):
     # Function to get the status
     def get_status(self):
         return self.status
+
+if __name__ == "__main__":
+    print(defaultTheme.name)
