@@ -3,13 +3,8 @@ import iomanager
 from PIL import ImageTk, Image
 import cv2 as cv2
 import time
-
 from threading import Timer
 from queue import Queue, Empty
-
-################
-# This section has a few sections of custom colours for users to select from, before setting colours to the default at the end.
-##################
 
 # Default Colour variables
 default_color_background = "#202020"
@@ -29,13 +24,13 @@ light_color_hover = "#76CBE3"
 light_color_container = "#F5F5F5"
 light_color_text = "#009696"
 
-currentThemeIndex = 0
+current_theme_index = 0
 
 # Setting default colours
-color_background = debug_color_background
-color_hover = debug_color_hover
-color_container = debug_container
-color_text = debug_color_text
+color_background = default_color_background
+color_hover = default_color_hover
+color_container = default_color_container
+color_text = default_color_text
 
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
@@ -174,37 +169,37 @@ class SettingsPage(tk.Frame):
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self,bg=color_background)
         settings_frame.grid(row=0,column=1,sticky="nesw")
-        self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command= self.rotateTheme)
+        self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command=self.rotate_theme)
         self.change_theme_button.config(bg=color_container, fg=color_text,font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
         self.change_theme_button.grid(row=0,column=0,pady=4)
 
-    def rotateTheme(self):
-        global currentThemeIndex
-        # Creating a dict to store all the themes in.
-        self.themeList = ["Theme: Dark","Theme: Light","Theme: Debug"]
+        self.tkvar = tk.StringVar(load)
 
-        print("ROTATE RUNNING")
-        if (currentThemeIndex < 2):
-            currentThemeIndex += 1
-        else:
-            currentThemeIndex = 0
-
-        self.change_theme_button.config(text=self.themeList[currentThemeIndex])
-        tkvar = tk.StringVar(load)
         # Dictionary with options
         choices = { 'Dark','Light','Debug'}
-        tkvar.set('Dark') # set the default option
-
-        popupMenu = tk.OptionMenu(settings_frame, tkvar, *choices)
-        tk.Label(settings_frame,bg=color_background, fg=color_text, text="Choose a theme!").grid(row = 1, column = 1)
-        popupMenu.grid(row = 2, column =1)
-        
-        # on change dropdown value
-        def change_dropdown(*args):
-            print( tkvar.get() )
-
+        self.tkvar.set('Dark') # set the default option
         # link function to change dropdown
-        tkvar.trace('w', change_dropdown)
+        self.tkvar.trace('w', self.change_dropdown)
+
+        popupMenu = tk.OptionMenu(self, self.tkvar, *choices)
+        tk.Label(self,bg=color_background, fg=color_text, text="Choose a theme!").grid(row = 1, column = 1)
+        popupMenu.grid(row = 2, column =1)
+
+    def rotate_theme(self):
+        global current_theme_index
+        # Creating a dict to store all the themes in.
+        self.theme_list = ["Theme: Dark","Theme: Light","Theme: Debug"]
+
+        if (current_theme_index < 2):
+            current_theme_index += 1
+        else:
+            current_theme_index = 0
+
+        self.change_theme_button.config(text=self.theme_list[current_theme_index])
+        
+    # on change dropdown value
+    def change_dropdown(self, *args):
+        print(self.tkvar.get())
 
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
