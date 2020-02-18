@@ -264,12 +264,14 @@ class VideoPlayer(tk.Frame):
     scheduler = None
     controls_frame = None
     controls_play = None
+    controls_trackbar = None
     play_image = None
     play_image_hover = None
     pause_image = None
     pause_image_hover = None
-
     buffer = None
+
+    drawn = 0
 
     # Constructor
     def __init__(self, parent):
@@ -295,8 +297,13 @@ class VideoPlayer(tk.Frame):
         self.controls_frame = tk.Frame(self, bg=color_background)
         self.controls_frame.grid(row=1, column=0, sticky="nesw", padx=10, pady=8)
         self.controls_frame.grid_columnconfigure(0, weight=1)
+        self.controls_frame.grid_rowconfigure(0, weight=0)
+        self.controls_frame.grid_rowconfigure(1, weight=0)
         self.controls_play = tk.Button(self.controls_frame, bd=0, bg=color_background, activebackground=color_background, image=self.play_image, command=self.toggle)
         self.controls_play.grid(row=0, column=0, sticky="ns")
+        # Create player trackbar
+        self.controls_trackbar = VideoTrackbar(self.controls_frame)
+        self.controls_trackbar.grid(row=1, column=0, sticky="nesw")
         # Bind hover events
         self.controls_play.bind("<Enter>", self.play_hover)
         self.controls_play.bind("<Leave>", self.play_leave)
@@ -396,6 +403,11 @@ class VideoPlayer(tk.Frame):
             # Draw the image
             self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
             self.frame = frame
+            # Increment drawn count
+            self.drawn += 1
+            # Update trackbar progress
+            # TODO: Run as daemonized thread
+            self.controls_trackbar.update(self.drawn, self.source_input.frames_total)
         except:
             # Return - no frame found
             return
@@ -404,6 +416,64 @@ class VideoPlayer(tk.Frame):
     def on_resize(self, event):
         self.width = event.width
         self.height = event.height
+
+class VideoTrackbar(tk.Canvas):
+    # Variables
+    current_frame = 0
+    end_frame = 0
+    percent = 0
+
+    # Constructor
+    def __init__(self, parent):
+        # Call superclass constructor
+        tk.Canvas.__init__(self, parent, highlightthickness=0, height=30, bg=color_background)
+        # Initialize variables
+        self.current_frame = 0
+        self.end_frame = 0
+        # Register resize listener
+        self.bind('<Configure>', self._resize)
+
+    # Update the current progress bar
+    def update(self, current_frame, end_frame):
+        # Update variables
+        self.current_frame = current_frame
+        self.end_frame = end_frame
+        # Calculate percentage completion from frames
+        if (self.current_frame >= 0 and self.end_frame > 0):
+            self.percent = (self.current_frame / self.end_frame)
+        # Call redraw function with new frames
+        self.redraw()
+
+    # Redraw the progress bar without new frames
+    def redraw(self):
+        # Check if the current frame and end frame are both zero - if so, no video is playing
+        if (self.current_frame == 0 and self.end_frame == 0):
+            # Draw full empty bar
+            self.coords(self.bar_start, 5, 12, 5, 18)
+            # Draw trackbar pointer
+            self.coords(self.tracker_outer, 1, 8, 15, 22)
+            self.coords(self.tracker_inner, 3, 10, 13, 20)
+        else:
+            # Calculate current point from percentage
+            point = self.w * self.percent
+            # Draw filled portion of bar
+            self.coords(self.bar_start, 5, 12, point, 18)
+            # Draw trackbar pointer
+            self.coords(self.tracker_outer, point - 7, 8, point + 7, 22)
+            self.coords(self.tracker_inner, point - 5, 10, point + 5, 20)
+
+    # Function for when the canvas is resized
+    def _resize(self, event):
+        # Get the new width
+        self.w = event.width - 10
+        # Draw full empty bar
+        self.bar_end = self.create_rectangle(5, 12, self.w, 18, fill="blue")
+        self.bar_start = self.create_rectangle(5, 12, self.w, 18, fill="red")
+        # Draw trackbar pointer
+        self.tracker_outer = self.create_oval(1, 8, 15, 22, fill=color_background)
+        self.tracker_inner = self.create_oval(3, 10, 13, 20, fill=color_hover)
+        # Redraw the progress
+        self.redraw()
 
 # - APP ITEMS
 class AppToolbar(tk.Frame):
@@ -556,11 +626,9 @@ class ThemeManager:
         # For every widget in the parent (aka the whole interface)...
         for widget in self.container.winfo_children():
             widget.configure(bg=theme._bgcolor)
-            #widget.configure(fg=themeTextDict[self.themeList[currentThemeIndex]])
             widget.configure()
             if (type(widget)==MenuButton):
                 print("MenuButton found!")
-                #widget.reConfigure(themeBackDict[self.themeList[currentThemeIndex]],themeTextDict[self.themeList[currentThemeIndex]])
             if (type(widget)==tk.Frame):
                 widget.configure(bg=theme._cntrcolor)
 
