@@ -92,10 +92,10 @@ themeContainerDict = {"Dark":default_color_container, "Debug":debug_container,"L
 themeTextDict = {"Dark":default_color_text, "Debug":debug_color_text,"Light":light_color_text}
 
 # Setting default colours
-color_background = debug_color_background
-color_hover = debug_color_hover
-color_container = debug_container
-color_text = debug_color_text
+color_background = currentTheme.background()
+color_hover = currentTheme.hover()
+color_container = currentTheme.container()
+color_text = currentTheme.text()
 
 
 # Global variable to store app instance
