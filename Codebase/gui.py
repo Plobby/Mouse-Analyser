@@ -1,5 +1,6 @@
 import tkinter as tk
 import iomanager
+import matplotlib
 from PIL import ImageTk, Image
 import cv2 as cv2
 import time
@@ -178,7 +179,7 @@ class SettingsPage(tk.Frame):
     def rotate_theme(self):
         name = self.app.theme_manager.rotate_theme()
         self.change_theme_button.config(text="Theme: " + name)
-        
+
     # on change dropdown value
     def change_dropdown(self, *args):
         print(self.tkvar.get())
@@ -202,10 +203,10 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-    
+
     def reConfigure(self, newBG, newFontColor):
         self.config(bg=newBG, fg=newFontColor)
-    
+
     def set_active(self, state):
         self.active = state
         if (self.active):
@@ -358,7 +359,7 @@ class VideoPlayer(tk.Frame):
             timer = Timer(interval=self.source_input.frames_interval, function=self._draw_frame, args=[self.buffer])
             timer.daemon = True
             timer.start()
-    
+
     # Function to pause the video
     def pause(self):
         # Check a source is present
