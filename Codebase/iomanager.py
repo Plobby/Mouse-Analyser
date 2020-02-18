@@ -8,8 +8,7 @@ import cv2
 import gui
 import cli_logger
 from cli_logger import LogLevel
-import Segmentation
-import CCL
+import videoproc
 
 # Hide the main tkinter window
 ROOT = Tk()
@@ -98,8 +97,7 @@ class VideoInput():
                 self.close()
                 return None
             # TODO: Process the frame properly here
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame = Segmentation.thresholdSegment(frame, Segmentation.otsuThreshold(frame))
+            frame = videoproc.processFrame(frame)
             frame = PIL.Image.fromarray(frame)
             self.frames_done = self.frames_done + 1
             return frame

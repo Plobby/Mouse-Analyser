@@ -6,6 +6,8 @@ import numpy
 More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html """
 
 def otsuThreshold(inpFrame):
+    #Turn frame to greyscale
+    inpFrame = cv2.cvtColor(inpFrame, cv2.COLOR_BGR2GRAY)
     #Number of colour channels
     channels = 256
     #Find histogram representing inpFrame
@@ -54,8 +56,11 @@ def otsuThreshold(inpFrame):
 
 """ Function to segment fore and background of a frame using threshold value """
 def thresholdSegment(inpFrame, threshold):
+    #Turn frame to greyscale
+    inpFrame = cv2.cvtColor(inpFrame, cv2.COLOR_BGR2GRAY)
     #Create a copy of inpFrame to be modified
     frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
+    #Fill with black pixels
     frame.fill(0)
 
     #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
