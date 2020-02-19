@@ -36,7 +36,10 @@ class App(tk.Tk):
     # Constructor
     def __init__(self, *args, **kwargs):
         # Call superclass function
-        tk.Toplevel.__init__(self, *args, **kwargs, bg=color_background)
+        tk.Toplevel.__init__(self, *args, **kwargs)
+        # Create new theme manager
+        self.theme_manager = ThemeManager(self)
+        self.theme_manager.register_item("bgr", self)
         # Configure resizing options through grid
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
@@ -62,11 +65,7 @@ class App(tk.Tk):
         self.status_bar = AppStatusBar(self, "Copyright: \xa9 MouseHUB 2020.")
         # Show the first frame
         self.video_page.tkraise()
-        # Create new theme manager
-        self.theme_manager = ThemeManager(self)
-        self.theme_manager.register_theme(Theme("Dark", "#202020", "#2B2B2B", "#383838", "#D4D4D4"))
-        self.theme_manager.register_theme(Theme("Light", "#EDEDED", "#76CBE3", "#F5F5F5", "#009696"))
-        self.theme_manager.register_theme(Theme("Debug", "#000FFF", "#00FF00", "#FFF100", "#FF0000"))
+        # Apply the theme manager colours
         self.theme_manager.apply_last_theme()
         # Register window close event
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -478,8 +477,10 @@ class VideoTrackbar(tk.Canvas):
 # - APP ITEMS
 class AppToolbar(tk.Frame):
     # Variables
+    icon = None
     button_frame = None
     buttons = []
+    parent = None
 
     # Images
     image_title = None
@@ -487,8 +488,11 @@ class AppToolbar(tk.Frame):
     # Constructor
     def __init__(self, parent):
         # Call superclass constructor
-        tk.Frame.__init__(self, parent, bg=color_container)
+        tk.Frame.__init__(self, parent)
+        # Bind parent for theme manager later
+        self.parent = parent
         self.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
+        parent.theme_manager.register_item("ctr", self)
         # Load images
         self.image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
         # Set grid values
@@ -496,10 +500,13 @@ class AppToolbar(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         # Add title and spacing container
-        tk.Label(self, image=self.image_title, bd=0, bg=color_container, highlightthickness=0).grid(row=0, column=0, sticky="nsw")
+        self.icon = tk.Label(self, image=self.image_title, bd=0, highlightthickness=0)
+        self.icon.grid(row=0, column=0, sticky="nsw")
+        parent.theme_manager.register_item("ctr", self.icon)
         # Frame for the buttons
-        self.button_frame = tk.Frame(self, bg=color_container)
+        self.button_frame = tk.Frame(self)
         self.button_frame.grid(row=0, column=1, padx=4, pady=(11, 0), sticky="es")
+        parent.theme_manager.register_item("ctr", self.button_frame)
 
     # Function for when a button is clicked
     def button_click(self, item, callback):
@@ -516,6 +523,7 @@ class AppToolbar(tk.Frame):
     def add_button(self, text, callback):
         btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback))
         btn.grid(row=0, column=len(self.buttons), padx=4)
+        self.parent.theme_manager.register_item("ctr", btn)
         self.buttons.append(btn)
         return btn
 
@@ -601,47 +609,77 @@ class Theme:
         self.__init__(name, bgcolor, hvrcolor, cntrcolor, txtcolor)
 
 class ThemeManager:
+    # Variables
     themes = []
     current_theme_index = 0
     current_theme = None
+    items = {
+        "bgr": [],
+        "hvr": [],
+        "ctr": [],
+        "txt": []
+    }
     container = None
 
+    # Constructor
     def __init__(self, container):
-        self.themes = []
-        self.current_theme_index = 0
-        self.container = container
+        # Load themes
+        self.register_theme(Theme("Dark", "#202020", "#2B2B2B", "#383838", "#D4D4D4"))
+        self.register_theme(Theme("Light", "#EDEDED", "#76CBE3", "#F5F5F5", "#009696"))
+        self.register_theme(Theme("Debug", "#000FFF", "#00FF00", "#FFF100", "#FF0000"))
 
+    # Register a theme
     def register_theme(self, theme):
+        # Append the added theme
         self.themes.append(theme)
 
+    # Function to register the item
+    def register_item(self, objtype, obj):
+        # Append the new item on the correct type
+        self.items[objtype].append(obj)
+
+    # Rotate to the next theme
     def rotate_theme(self):
+        # Increment if not at the end of the themes list
         if (self.current_theme_index < (len(self.themes) - 1)):
             self.current_theme_index += 1
         else:
             self.current_theme_index = 0
+        # Apply the new theme
         self.apply_theme(self.themes[self.current_theme_index])
+        # Return the theme name
         return self.themes[self.current_theme_index]._name
 
+    # Apply a theme
     def apply_theme(self, theme):
-        # For every widget in the parent (aka the whole interface)...
-        for widget in self.container.winfo_children():
-            widget.configure(bg=theme._bgcolor)
-            widget.configure()
-            if (type(widget)==MenuButton):
-                print("MenuButton found!")
-            if (type(widget)==tk.Frame):
-                widget.configure(bg=theme._cntrcolor)
+        # Update the current theme
+        self.current_theme = theme
+        # Iterate background items
+        for item in self.items["bgr"]:
+            item.configure(bg=theme._bgcolor)
+        # Iterate container items
+        for item in self.items["ctr"]:
+            item.configure(bg=theme._cntrcolor)
+        # Iterate text items
+        for item in self.items["txt"]:
+            item.configure(fg=theme._txtcolor)
 
     def apply_last_theme(self):
+        # Get the last theme
         settings = self.get_last_theme()
+        # Apply the last theme
         self.apply_theme(Theme(settings[0],settings[1],settings[2],settings[3],settings[4]))
 
-    # Open the settings file and load the last used/default theme.
+    # Get the last used theme
     def get_last_theme(self):
+        # Open the settings file
         settingsFile = open('../settings.txt', 'r+')
+        # Create array to store settings
         settings = []
-        line = ""
+        # Iterate all lines in find and append the line without line ending
         for line in settingsFile:
             settings.append(line.strip('\n'))
+        # Close the settings file
         settingsFile.close()
+        # Return the compiled settings
         return settings
