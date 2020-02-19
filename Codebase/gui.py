@@ -6,10 +6,10 @@ import time
 from threading import Timer
 from queue import Queue, Empty
 
-color_background = "#202020"
-color_hover = "#2B2B2B"
-color_container = "#383838"
-color_text = "#D4D4D4"
+#color_background = "#202020"
+#color_hover = "#2B2B2B"
+#color_container = "#383838"
+#color_text = "#D4D4D4"
 
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
@@ -90,7 +90,8 @@ class VideoPage(tk.Frame):
     # Constructor
     def __init__(self, parent):
         # Call superclass function
-        tk.Frame.__init__(self, parent, bg=color_background)
+        tk.Frame.__init__(self, parent)
+        parent.app.theme_manager.register_item("bgr", self)
         self.grid(row=0, column=0, sticky="nesw")
         # Load images
         button_add = ImageTk.PhotoImage(file="../Assets/ButtonAdd.png")
@@ -101,14 +102,16 @@ class VideoPage(tk.Frame):
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         # Videos List
-        queue_container = tk.Frame(self, bg=color_background)
+        queue_container = tk.Frame(self)
         queue_container.grid(row=0, column=0, sticky="nesw")
         queue_container.grid_rowconfigure(0, weight=0)
         queue_container.grid_rowconfigure(1, weight=1)
         queue_container.grid_columnconfigure(0, weight=1)
+        parent.app.theme_manager.register_item("bgr", queue_container)
         # Queue buttons
-        queue_buttons_frame = tk.Frame(queue_container, bg=color_container)
+        queue_buttons_frame = tk.Frame(queue_container)
         queue_buttons_frame.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
+        parent.app.theme_manager.register_item("ctr", queue_buttons_frame)
         # Add buttons
         IconButton(queue_buttons_frame, button_add, self.import_videos).grid(row=0, column=0, padx=4, pady=4)
         IconButton(queue_buttons_frame, button_clear, self.clear_videos).grid(row=0, column=1, padx=4, pady=4)
@@ -140,13 +143,15 @@ class VideoPage(tk.Frame):
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Call superclass function
-        tk.Frame.__init__(self, parent, bg=color_background)
+        tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
+        parent.app.theme_manager.register_item("bgr", self)
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent):
-        tk.Frame.__init__(self, parent, bg=color_background)
+        tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
+        parent.app.theme_manager.register_item("bgr", self)
         # Configuring rows
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
@@ -156,11 +161,14 @@ class SettingsPage(tk.Frame):
         self.app = parent.app
 
         # Creating a frame to put all the buttons in.
-        settings_frame = tk.Frame(self,bg=color_background)
+        settings_frame = tk.Frame(self)
         settings_frame.grid(row=0,column=1,sticky="nesw")
+        parent.app.theme_manager.register_item("bgr", settings_frame)
         self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command=self.rotate_theme)
-        self.change_theme_button.config(bg=color_container, fg=color_text,font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
+        self.change_theme_button.config(font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
         self.change_theme_button.grid(row=0,column=0,pady=4)
+        parent.app.theme_manager.register_item("ctr", self.change_theme_button)
+        parent.app.theme_manager.register_item("txt", self.change_theme_button)
 
         self.tkvar = tk.StringVar(load)
 
@@ -171,7 +179,10 @@ class SettingsPage(tk.Frame):
         self.tkvar.trace('w', self.change_dropdown)
 
         popupMenu = tk.OptionMenu(self, self.tkvar, *choices)
-        tk.Label(self,bg=color_background, fg=color_text, text="Choose a theme!").grid(row = 1, column = 1)
+        label = tk.Label(self, text="Choose a theme!")
+        label.grid(row = 1, column = 1)
+        parent.app.theme_manager.register_item("bgr", label)
+        parent.app.theme_manager.register_item("txt", label)
         popupMenu.grid(row = 2, column =1)
 
     def rotate_theme(self):
@@ -185,12 +196,22 @@ class SettingsPage(tk.Frame):
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
+    theme_manager = None
 
-    def __init__(self, parent, text, func):
+    def __init__(self, parent, text, func, theme_manager):
+        # Load and store images
         self.tab = ImageTk.PhotoImage(file="../Assets/Tab.png")
         self.tab_active = ImageTk.PhotoImage(file="../Assets/TabActive.png")
-        tk.Button.__init__(self, parent, image=self.tab, text=text, compound="center", command=func, bd=0, bg=color_container, activebackground=color_container, fg=color_text, font=("Rockwell", 16), pady=0, highlightthickness=0)
 
+        # Constructor call
+        tk.Button.__init__(self, parent, image=self.tab, text=text, compound="center", command=func, bd=0, font=("Rockwell", 16), pady=0, highlightthickness=0)
+
+        # Configure theme manager colours
+        theme_manager.register_item("ctr", self)
+        theme_manager.register_item("actr", self)
+        theme_manager.register_item("txt", self)
+
+        # Register events
         self.bind("<Enter>", self.on_enter)
         self.bind("<Leave>", self.on_leave)
 
@@ -202,9 +223,6 @@ class MenuButton(tk.Button):
         if (not self.active):
             self.configure(image=self.tab)
     
-    def reConfigure(self, newBG, newFontColor):
-        self.config(bg=newBG, fg=newFontColor)
-    
     def set_active(self, state):
         self.active = state
         if (self.active):
@@ -213,21 +231,24 @@ class MenuButton(tk.Button):
             self.configure(image=self.tab)
 
 class IconButton(tk.Button):
-    def __init__(self, parent, image, func):
-        tk.Button.__init__(self, parent, image=image, compound="left", command=func, bd=0, bg=color_container, activebackground=color_container, padx=8, highlightthickness=0)
+    def __init__(self, parent, image, func, theme_manager):
+        tk.Button.__init__(self, parent, image=image, compound="left", command=func, bd=0, padx=8, highlightthickness=0)
+        theme_manager.register_item("ctr", self)
+        theme_manager.register_item("actr", self)
         self.image = image
 
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
     videos = []
 
-    def __init__(self, parent):
+    def __init__(self, parent, theme_manager):
         tk.Frame.__init__(self, parent)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
         self.grid_rowconfigure(0, weight=1)
-        self.scrollitems = tk.Frame(self, bg=color_hover)
+        self.scrollitems = tk.Frame(self)
         self.scrollitems.grid(row=0, column=0, sticky="nesw")
+        theme_manager.register_item("ctr", self.scrollitems)
         self.scrollitems.grid_columnconfigure(0, weight=1)
         self.scrollbar = tk.Scrollbar(self, orient="vertical")
         self.scrollbar.grid(row=0, column=1, sticky="nesw")
@@ -273,7 +294,7 @@ class VideoPlayer(tk.Frame):
     drawn = 0
 
     # Constructor
-    def __init__(self, parent):
+    def __init__(self, parent, theme_manager):
         # Create read buffer
         self.buffer = Queue(maxsize=128)
         # Load images
@@ -282,24 +303,29 @@ class VideoPlayer(tk.Frame):
         self.pause_image = ImageTk.PhotoImage(file="../Assets/ButtonPause.png")
         self.pause_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPauseHover.png")
         # Call superclass constructor
-        tk.Frame.__init__(self, parent, bg=color_background)
+        tk.Frame.__init__(self, parent)
+        theme_manager.register_item("bgr", self)
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
         self.grid_columnconfigure(0, weight=1)
         # Create canvas
-        self.canvas = tk.Canvas(self, bg="black", highlightbackground=color_container)
+        self.canvas = tk.Canvas(self, bg="black")
         self.canvas.grid(row=0, column=0, sticky="nesw")
+        theme_manager.register_item("actr", self.canvas)
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
         self.canvas.bind("<Configure>", self.on_resize)
         # Create player bar
-        self.controls_frame = tk.Frame(self, bg=color_background)
+        self.controls_frame = tk.Frame(self)
         self.controls_frame.grid(row=1, column=0, sticky="nesw", padx=10, pady=8)
         self.controls_frame.grid_columnconfigure(0, weight=1)
         self.controls_frame.grid_rowconfigure(0, weight=0)
         self.controls_frame.grid_rowconfigure(1, weight=0)
-        self.controls_play = tk.Button(self.controls_frame, bd=0, bg=color_background, activebackground=color_background, image=self.play_image, command=self.toggle)
+        theme_manager.register_item("bgr", self.controls_frame)
+        self.controls_play = tk.Button(self.controls_frame, bd=0, image=self.play_image, command=self.toggle)
         self.controls_play.grid(row=0, column=0, sticky="ns")
+        theme_manager.register_item("bgr", self.controls_play)
+        theme_manager.register_item("abgr", self.controls_play)
         # Create player trackbar
         self.controls_trackbar = VideoTrackbar(self.controls_frame)
         self.controls_trackbar.grid(row=1, column=0, sticky="nesw")
@@ -423,9 +449,12 @@ class VideoTrackbar(tk.Canvas):
     percent = 0
 
     # Constructor
-    def __init__(self, parent):
+    def __init__(self, parent, theme_manager):
         # Call superclass constructor
-        tk.Canvas.__init__(self, parent, highlightthickness=0, height=30, bg=color_background)
+        tk.Canvas.__init__(self, parent, highlightthickness=0, height=30)
+        theme_manager.register_item("bgr", self)
+        # Bind theme manager to object variable
+        self.theme_manager = theme_manager
         # Initialize variables
         self.current_frame = 0
         self.end_frame = 0
@@ -469,8 +498,9 @@ class VideoTrackbar(tk.Canvas):
         self.bar_end = self.create_rectangle(5, 12, self.w, 18, fill="blue")
         self.bar_start = self.create_rectangle(5, 12, self.w, 18, fill="red")
         # Draw trackbar pointer
-        self.tracker_outer = self.create_oval(1, 8, 15, 22, fill=color_background)
-        self.tracker_inner = self.create_oval(3, 10, 13, 20, fill=color_hover)
+        self.tracker_outer = self.create_oval(1, 8, 15, 22, fill="orange")
+        self.tracker_inner = self.create_oval(3, 10, 13, 20, fill="green")
+        # TODO: Fill based on theme
         # Redraw the progress
         self.redraw()
 
@@ -521,7 +551,7 @@ class AppToolbar(tk.Frame):
 
     # Function to add a button to the toolbar
     def add_button(self, text, callback):
-        btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback))
+        btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback), parent.theme_manager)
         btn.grid(row=0, column=len(self.buttons), padx=4)
         self.parent.theme_manager.register_item("ctr", btn)
         self.buttons.append(btn)
@@ -539,8 +569,9 @@ class AppPageView(tk.Frame):
     frames = []
 
     # Constructor
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent, bg=color_container)
+    def __init__(self, parent, theme_manager):
+        tk.Frame.__init__(self, parent)
+        theme_manager.register_item("ctr", self)
         # Set grid values
         self.grid(column=0, row=1, sticky="nesw")
         self.grid_rowconfigure(0, weight=1)
@@ -560,17 +591,23 @@ class AppStatusBar(tk.Frame):
     status = "Ready to process."
 
     # Constructor
-    def __init__(self, parent, copyright):
+    def __init__(self, parent, copyright, theme_manager):
         # Frame for the status bar
-        tk.Frame.__init__(self, parent, bg=color_container)
+        tk.Frame.__init__(self, parent)
+        theme_manager.register_item("ctr", self)
         self.grid(row=2, column=0, sticky="nesw", pady=(4, 0))
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         # Status bar text
-        self.status_label = tk.Label(self, text="Status: Ready to process.", bg=color_container, fg=color_text)
+        self.status_label = tk.Label(self, text="Status: Ready to process.")
+        theme_manager.register_item("ctr", self.status_label)
+        theme_manager.register_item("txt", self.status_label)
         self.status_label.grid(row=0, column=0, sticky="nsw", pady=2, padx=10)
         # Copyright text
-        tk.Label(self, text=copyright, bg=color_container, fg=color_text).grid(row=0, column=1, sticky="nes", pady=2, padx=10)
+        label = tk.Label(self, text=copyright)
+        theme_manager.register_item("ctr", label)
+        theme_manager.register_item("txt", label)
+        label.grid(row=0, column=1, sticky="nes", pady=2, padx=10)
 
     # Function to update the status
     def set_status(self, status):
@@ -617,7 +654,9 @@ class ThemeManager:
         "bgr": [],
         "hvr": [],
         "ctr": [],
-        "txt": []
+        "txt": [],
+        "abgr": [],
+        "actr": []
     }
     container = None
 
@@ -663,6 +702,12 @@ class ThemeManager:
         # Iterate text items
         for item in self.items["txt"]:
             item.configure(fg=theme._txtcolor)
+        # Iterate active background items
+        for item in self.items["abgr"]:
+            item.configure(activebackground=theme._bgcolor)
+        # Iterate active container items
+        for item in self.items["actr"]:
+            item.configure(activebackground=theme._cntrcolor)
 
     def apply_last_theme(self):
         # Get the last theme
