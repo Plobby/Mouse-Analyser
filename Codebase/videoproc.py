@@ -13,17 +13,15 @@ def processFrame(frame):
     #Find all objects in segmented frame using CCL
     objects = CCL.CCL(segmented)
     
-    #Find largest object in frame
-    largestObjectKey = 1;
-    for key in objects.keys():
-        if len(objects[key]) > len(objects[largestObjectKey]):
-            largestObjectKey = key
-
-    #Remove all but the largest object from the foreground
-    for x in range(segmented.shape[0]):
-        for y in range(segmented.shape[1]):
-            if (x, y) not in objects[largestObjectKey]:
-                segmented[x, y] = 0
+    #Create array to hold sorted objects keys
+    sortedKeys = []
+    
+    #Sort keys of objects in reverse order by length of value associated with key
+    for key in sorted(objects, key=lambda key: len(objects[key]), reverse=True):
+        sortedKeys.append(key)
+    
+    #Set targetObject to the 2nd largest object in frame (feed station is largest, mouse 2nd largest)
+    targetObject = sortedKeys[1]
     
     #Find extreme pixels in largest object
     MinX = frame.shape[0]
@@ -31,7 +29,7 @@ def processFrame(frame):
     MinY = frame.shape[1]
     MaxY = 0
 
-    for coord in objects[largestObjectKey]:
+    for coord in objects[targetObject]:
         if coord[0] < MinX:
             MinX = coord[0]
         if coord[0] > MaxX:
@@ -51,4 +49,9 @@ def processFrame(frame):
             elif ((x >= MinX) and (x <= MaxX)) and ((y == MinY) or (y == MaxY)):
                 frame[x, y] = [255, 0, 0]
 
-    return frame
+    #Find center of mass of mouse by finding middle of bounding box
+    xCOM = MinX + ((MaxX - MinX) / 2)
+    yCOM = MinY + ((MaxY - MinY) / 2)
+
+    #Return bounded frame and center of mass for x and y
+    return frame, xCOM, yCOM
