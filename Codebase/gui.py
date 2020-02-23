@@ -4,6 +4,7 @@ import threading
 from PIL import ImageTk, Image
 import PIL
 import cv2
+import videoproc
 
 # Load images
 AddVideosImage = ImageTk.PhotoImage(Image.open("../Assets/AddVideosButton.jpg"))
@@ -135,6 +136,7 @@ class Pages(tk.Tk):
     # Function to play a video
     def play_video(self, video):
         video.open()
+        video = videoproc.processVideo(video)
         self.playing = video
         self.play_video_frame()
 

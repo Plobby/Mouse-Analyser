@@ -97,8 +97,7 @@ class VideoInput():
                 self.close()
                 return None
             # TODO: Process the frame properly here
-            frame = videoproc.processFrame(frame)
-            frame = PIL.Image.fromarray(frame)
+            frame = PIL.Image.fromarray(frame[0])
             self.frames_done = self.frames_done + 1
             return frame
         self.close()
