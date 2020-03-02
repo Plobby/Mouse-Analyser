@@ -5,17 +5,18 @@ import iomanager
 import Segmentation as seg
 import CCL
 
-"""Function that processes a CV2 VideoCapture object to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
+"""Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
 def processVideo(videoSource):
-    #Dictionary containing bounding box locations for each frame
+    #Dictionary containing bounding box locations for each frame (key = frame position)
     frameBoundingBoxes = {}
     #List of unprocessed frames, by frame position in video
     unprocessed = []
     #Threshold value to be applied to all frames, as calculated from the first frame
     videoThreshold = 0
     
+    #Open video stored at videoSource as cv2 VideoCapture object
     video = cv2.VideoCapture(videoSource)
 
     #Get first frame of video
@@ -31,10 +32,10 @@ def processVideo(videoSource):
         #Calculate bounding box size for mouse in frame
         boundingBox = processFrame(frame, videoThreshold)
 
-        #If the size difference between the two largest objects in the frame is too different, save frame for later
+        #If a bounding box is not found, save frame for later
         if boundingBox == None:
             unprocessed.append(framePos)
-        #Else use the bounding box of the current frame as the bounding box for unprocessed frames before it
+        #Else use the bounding box of the current frame as the bounding box for any unprocessed frames before it
         else:
             while len(unprocessed) > 0:
                 frameBoundingBoxes[unprocessed.pop(0)] = boundingBox   
@@ -65,15 +66,17 @@ def processVideo(videoSource):
             for y in range(box[2], box[3] + 1):
                 frame[box[0], y] = [255, 0, 0]
                 frame[box[1], y] = [255, 0, 0]
+
         else:
             break
-    
+
+    #Save video to user's desired location
     iomanager.save_videos([video], None)
 
     #TODO: return tracking info (centre of mass, height & width) instead of video
     return video
 
-"""Function that attempt to find the mouse in a frame. If no mouse can be clearly found, return None. Else, return bounding box min and max values"""
+"""Function that attempt to find the mouse in a frame. If no mouse cannot be clearly found, return None. Else, return bounding box min and max values"""
 def processFrame(frame, threshold):
      #Create segmented version of frame
     segmented = seg.thresholdSegment(frame, threshold)
@@ -83,11 +86,11 @@ def processFrame(frame, threshold):
     #Create array to hold sorted objects keys
     sortedKeys = []
     
-    #Sort keys of objects in reverse order by length of value associated with key
-    for key in sorted(objects, key=lambda key: len(objects[key]), reverse=True):
+    #Sort keys of objects in reverse order by length of array associated with each key
+    for key in sorted(objects, key=lambda k: len(objects[k]), reverse=True):
         sortedKeys.append(key) 
     
-    #Set targetObject to the 2nd largest object in frame (feed station is largest, mouse 2nd largest)
+    #Set targetObject to the 2nd largest object in frame (assuming feed station is largest, mouse 2nd largest)
     targetObject = sortedKeys[1]
     
     #Find extreme pixels in target object
