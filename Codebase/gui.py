@@ -154,9 +154,12 @@ class DataPage(tk.Frame):
         graphFigure = plt.figure(facecolor=color_background) # Figure for graphing.
         graphGenerator = graph.dataGraph() # object to store datagraph in.
 
-        xLabels = ["Sleeping","Eating","Moving","Undefined"]
+        xLabels = {"Sleeping":0,
+        "Eating":1,
+        "Moving":2,
+        "Undefined":3}
         yValues = [50,30,120,25]
-        mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2]
+        mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
         #graphFigure = graphGenerator.createBasicBarChart(graphFigure, xLabels, yValues)
         graphFigure = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
