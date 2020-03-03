@@ -65,28 +65,47 @@ class dataGraph():
             barValues = []
             tempList = []
 
+            # Next step is to turn the new binary lists into graphable values.
+
             print("Should be five:", round(timePeriodPerBar/timeGapPerReportedPosition))
 
             for listItem in indexDict: # For each list inside the index...
                 loopInt = 1
                 positionValue = 0
                 for xy in listItem: # For each item inside each list...
-                    if loopInt % round(timePeriodPerBar/timeGapPerReportedPosition) == 0:
+                    positionValue += xy
+                    if loopInt % round(timePeriodPerBar/timeGapPerReportedPosition) == 0: # Check if the looping integer is divisible by a divison between the time per bar divided by the time gap between reports.
                         #tempList.append(xy)
-                        positionValue += xy
                         tempList.append(positionValue)
                         positionValue = 0
-                    else:
-                        positionValue += xy
-                        #tempList.append(xy)
-
                     loopInt += 1
 
                 barValues += [tempList]
                 tempList = []
 
-            print(barValues)
+             # We also need a list for the other axis. That's where this next little loop comes in - it makes that list.
 
+            xValues = []
+            xValue = round(timePeriodPerBar/timeGapPerReportedPosition)
+
+            for things in barValues[0]: # Makes a number of bars equal to the amount of data inputted.
+                xValues.append(xValue)
+                xValue += round(timePeriodPerBar/timeGapPerReportedPosition) # The values for the bars are the same as the difference from before.
+
+            print(barValues)
+            print(xValues)
+            useList = []
+
+            stackValue = 0;
+            use = plt.bar(xValues,barValues[0])
+            useList.append(use)
+
+            print(len(barValues))
+
+            while stackValue < len(barValues)-1:
+                use = plt.bar(xValues,barValues[stackValue+1], bottom = barValues[stackValue])
+                useList.append(use)
+                stackValue += 1
 
 
 
@@ -124,8 +143,6 @@ if __name__ == "__main__":
     mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
     newGraph = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
-
-
 
     plt.show()
     input()
