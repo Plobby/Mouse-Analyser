@@ -16,7 +16,7 @@ def processVideo(videoSource):
     #Threshold value to be applied to all frames, as calculated from the first frame
     videoThreshold = 0
     
-    #Open video stored at videoSource as cv2 VideoCapture object
+    #Open the video stored at videoSource
     video = cv2.VideoCapture(videoSource)
 
     #Get first frame of video
@@ -47,8 +47,10 @@ def processVideo(videoSource):
         #Break while loop if return flag is false
         if not ret:
             break
+    
+    mouseData = []
 
-    #Draw bounding box on to each frame of video
+    #Draw bounding box on to each frame of video and calculate com, width & height
     for key, box in frameBoundingBoxes.items(): #Box contains [MinimumX, MaximumX, MinimumY, MaximumY] values for bounding box
         #Set frame position
         video.set(cv2.CAP_PROP_POS_FRAMES, key)
@@ -70,11 +72,20 @@ def processVideo(videoSource):
         else:
             break
 
+        #Find width of mouse
+        mouseWidth = box[3] - box[2]
+        #Find height of mouse
+        mouseHeight = box[1] - box[0]
+        #Find centre of mass of mouse
+        mouseCOM = (box[2] + (mouseWidth / 2), box[0] + (mouseHeight / 2))
+
+        #Add mouse data to mouseData (conventional coordinates i.e. (0,0) = bottom left corner)
+        mouseData.append([mouseCOM, mouseWidth, mouseHeight])
+
     #Save video to user's desired location
     iomanager.save_videos([video], None)
 
-    #TODO: return tracking info (centre of mass, height & width) instead of video
-    return video
+    return video, mouseData
 
 """Function that attempt to find the mouse in a frame. If no mouse cannot be clearly found, return None. Else, return bounding box min and max values"""
 def processFrame(frame, threshold):
