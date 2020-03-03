@@ -49,8 +49,8 @@ class dataGraph():
             for meaning in positionMeaning: # For each meaning in the dict of meanings....
                 itemChecker = positionMeaning[meaning] # Set the checker to the current meaning.
                 for x in range(0, len(positionList)-1): # For each item in the position list
-                    print(x)
-                    print(positionList)
+                    #print(x)
+                    #print(positionList)
                     if positionList[x] == itemChecker: # Check if the current value is the one being searched for
                         tempList.append(1) # If it is, append 1 to the temporary list
                     else: # If it isn't...
@@ -60,9 +60,32 @@ class dataGraph():
                 indexDict += [tempList] # Slowly creating a 2d list by storing each kind of action as a binary list of whether it's currently being performed.
                 tempList = [] # Empty the temporary list once it's finished :)
 
-            print("INDEX")
+            #print("INDEX")
             print(indexDict)
+            barValues = []
+            tempList = []
 
+            print("Should be five:", round(timePeriodPerBar/timeGapPerReportedPosition))
+
+            for listItem in indexDict: # For each list inside the index...
+                loopInt = 1
+                positionValue = 0
+                for xy in listItem: # For each item inside each list...
+                    if loopInt % round(timePeriodPerBar/timeGapPerReportedPosition) == 0:
+                        #tempList.append(xy)
+                        positionValue += xy
+                        tempList.append(positionValue)
+                        positionValue = 0
+                    else:
+                        positionValue += xy
+                        #tempList.append(xy)
+
+                    loopInt += 1
+
+                barValues += [tempList]
+                tempList = []
+
+            print(barValues)
 
 
 
