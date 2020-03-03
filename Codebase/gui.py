@@ -1,11 +1,17 @@
 import tkinter as tk
 import iomanager
+import numpy
 import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+matplotlib.use("TkAgg")
 from PIL import ImageTk, Image
 import cv2 as cv2
 import time
 from threading import Timer
 from queue import Queue, Empty
+import graphing as graph # Import graphing under name graph
 
 color_background = "#202020"
 color_hover = "#2B2B2B"
@@ -144,6 +150,28 @@ class DataPage(tk.Frame):
         # Call superclass function
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
+
+        graphFigure = plt.figure(facecolor=color_background) # Figure for graphing.
+        graphGenerator = graph.dataGraph() # object to store datagraph in.
+
+        xLabels = ["Sleeping","Eating","Moving","Undefined"]
+        yValues = [50,30,120,25]
+        mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2]
+
+        #graphFigure = graphGenerator.createBasicBarChart(graphFigure, xLabels, yValues)
+        graphFigure = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+
+        canvas1 = FigureCanvasTkAgg(graphFigure, self)
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+
+
+    def showBarChart(self,graphFigure,graphGenerator,canvas1):
+        # Code to implement graph on canvas + page
+
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent):
