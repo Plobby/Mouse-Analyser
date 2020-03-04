@@ -8,7 +8,7 @@ import CCL
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
-def processVideo(videoSource):
+def processVideo(videoSource, doSaveVid):
     #Dictionary containing bounding box locations for each frame (key = frame position)
     frameBoundingBoxes = {}
     #List of unprocessed frames, by frame position in video
@@ -48,6 +48,27 @@ def processVideo(videoSource):
         if not ret:
             break
     
+    #Initialise variables and VideoWriter object needed to save videos if doSaveVid flag is true
+    if doSaveVid:
+        #Split videoSource string to find parent folder (source) and file name
+        try:
+            split = videoSource.split('/')
+            fileName = split[-1].split('.')[0]
+        except:
+            try:
+                split = videoSource.split('\\')
+                fileName = split[-1].split('.')[0]
+            except:
+                fileName = 'untitled'
+
+        source = videoSource.replace(split[-1], '')
+
+        #Create cv2 VideoWriter object to output bounded video
+        out = cv2.VideoWriter(source + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+
+        print(source + fileName + '-bounded.mp4')
+
+    #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
     mouseData = []
 
     #Draw bounding box on to each frame of video and calculate com, width & height
@@ -71,7 +92,7 @@ def processVideo(videoSource):
 
         else:
             break
-
+        
         #Find width of mouse
         mouseWidth = box[3] - box[2]
         #Find height of mouse
@@ -82,10 +103,18 @@ def processVideo(videoSource):
         #Add mouse data to mouseData (conventional coordinates i.e. (0,0) = bottom left corner)
         mouseData.append([mouseCOM, mouseWidth, mouseHeight])
 
-    #Save video to user's desired location
-    iomanager.save_videos([video], None)
+        if doSaveVid:
+            #Save bounded frame
+            out.write(frame)
 
-    return video, mouseData
+    #Release video
+    video.release()
+    
+    #Release VideoWriter object if doSaveVid is true
+    if doSaveVid:
+        out.release()
+
+    return mouseData
 
 """Function that attempt to find the mouse in a frame. If no mouse cannot be clearly found, return None. Else, return bounding box min and max values"""
 def processFrame(frame, threshold):
@@ -121,5 +150,3 @@ def processFrame(frame, threshold):
             MaxY = coord[1]
 
     return MinX, MaxX, MinY, MaxY
-
-    
