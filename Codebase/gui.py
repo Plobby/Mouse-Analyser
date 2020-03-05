@@ -6,11 +6,6 @@ import time
 from threading import Timer
 from queue import Queue, Empty
 
-#color_background = "#202020"
-#color_hover = "#2B2B2B"
-#color_container = "#383838"
-#color_text = "#D4D4D4"
-
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
 load.withdraw()
@@ -51,7 +46,7 @@ class App(tk.Tk):
         self.geometry("1280x720")
         self.minsize(780, 520)
         # Create frame view
-        page_view = AppPageView(self)
+        page_view = AppPageView(self, self.theme_manager)
         self.video_page = page_view.add_page(VideoPage)
         self.data_page = page_view.add_page(DataPage)
         self.settings_page = page_view.add_page(SettingsPage)
@@ -62,7 +57,7 @@ class App(tk.Tk):
         toolbar.add_button("Settings", self.settings_page.tkraise)
         toolbar.add_button("Exit", self.close)
         # Create status bar
-        self.status_bar = AppStatusBar(self, "Copyright: \xa9 MouseHUB 2020.")
+        self.status_bar = AppStatusBar(self, "Copyright: \xa9 MouseHUB 2020.", self.theme_manager)
         # Show the first frame
         self.video_page.tkraise()
         # Apply the theme manager colours
@@ -113,14 +108,14 @@ class VideoPage(tk.Frame):
         queue_buttons_frame.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
         parent.app.theme_manager.register_item("ctr", queue_buttons_frame)
         # Add buttons
-        IconButton(queue_buttons_frame, button_add, self.import_videos).grid(row=0, column=0, padx=4, pady=4)
-        IconButton(queue_buttons_frame, button_clear, self.clear_videos).grid(row=0, column=1, padx=4, pady=4)
-        IconButton(queue_buttons_frame, button_process, self.process_videos).grid(row=0, column=2, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_add, self.import_videos, parent.app.theme_manager).grid(row=0, column=0, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_clear, self.clear_videos, parent.app.theme_manager).grid(row=0, column=1, padx=4, pady=4)
+        IconButton(queue_buttons_frame, button_process, self.process_videos, parent.app.theme_manager).grid(row=0, column=2, padx=4, pady=4)
         # Queue items list
-        self.video_queue = VideoQueue(queue_container)
+        self.video_queue = VideoQueue(queue_container, parent.app.theme_manager)
         self.video_queue.grid(row=1, column=0, sticky="nesw")
         # Video player
-        self.video_player = VideoPlayer(self)
+        self.video_player = VideoPlayer(self, parent.app.theme_manager)
         self.video_player.grid(row=0, column=1, padx=(4, 0), sticky="nesw")
 
     # Function to allow the user to select and import videos
@@ -311,7 +306,7 @@ class VideoPlayer(tk.Frame):
         # Create canvas
         self.canvas = tk.Canvas(self, bg="black")
         self.canvas.grid(row=0, column=0, sticky="nesw")
-        theme_manager.register_item("actr", self.canvas)
+        theme_manager.register_item("hbgr", self.canvas)
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
         self.canvas.bind("<Configure>", self.on_resize)
@@ -327,7 +322,7 @@ class VideoPlayer(tk.Frame):
         theme_manager.register_item("bgr", self.controls_play)
         theme_manager.register_item("abgr", self.controls_play)
         # Create player trackbar
-        self.controls_trackbar = VideoTrackbar(self.controls_frame)
+        self.controls_trackbar = VideoTrackbar(self.controls_frame, theme_manager)
         self.controls_trackbar.grid(row=1, column=0, sticky="nesw")
         # Bind hover events
         self.controls_play.bind("<Enter>", self.play_hover)
@@ -431,7 +426,6 @@ class VideoPlayer(tk.Frame):
             # Increment drawn count
             self.drawn += 1
             # Update trackbar progress
-            # TODO: Run as daemonized thread
             self.controls_trackbar.update(self.drawn, self.source_input.frames_total)
         except:
             # Return - no frame found
@@ -487,8 +481,8 @@ class VideoTrackbar(tk.Canvas):
             # Draw filled portion of bar
             self.coords(self.bar_start, 5, 12, point, 18)
             # Draw trackbar pointer
-            self.coords(self.tracker_outer, point - 7, 8, point + 7, 22)
-            self.coords(self.tracker_inner, point - 5, 10, point + 5, 20)
+            self.coords(self.tracker_outer, point, 8, point + 14, 22)
+            self.coords(self.tracker_inner, point + 2, 10, point + 12, 20)
 
     # Function for when the canvas is resized
     def _resize(self, event):
@@ -551,7 +545,7 @@ class AppToolbar(tk.Frame):
 
     # Function to add a button to the toolbar
     def add_button(self, text, callback):
-        btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback), parent.theme_manager)
+        btn = MenuButton(self.button_frame, text, lambda: self.button_click(btn, callback), self.parent.theme_manager)
         btn.grid(row=0, column=len(self.buttons), padx=4)
         self.parent.theme_manager.register_item("ctr", btn)
         self.buttons.append(btn)
@@ -656,7 +650,8 @@ class ThemeManager:
         "ctr": [],
         "txt": [],
         "abgr": [],
-        "actr": []
+        "actr": [],
+        "hbgr": []
     }
     container = None
 
@@ -708,6 +703,9 @@ class ThemeManager:
         # Iterate active container items
         for item in self.items["actr"]:
             item.configure(activebackground=theme._cntrcolor)
+        # Iterate highlight container items
+        for item in self.items["hbgr"]:
+            item.configure(highlightbackground=theme._cntrcolor)
 
     def apply_last_theme(self):
         # Get the last theme
