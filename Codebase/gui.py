@@ -234,36 +234,75 @@ class IconButton(tk.Button):
 
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
+    # Variables
     videos = []
+    theme_manager = None
 
+    render_height = 100
+    render_spacing = 4
+
+    # Constructor
     def __init__(self, parent, theme_manager):
+        # Call superclass constructor
         tk.Frame.__init__(self, parent)
+        # Configure column and row weights
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
         self.grid_rowconfigure(0, weight=1)
-        self.scrollitems = tk.Frame(self)
+        # Register and configure canvas for scrollable items
+        self.scrollitems = tk.Canvas(self, scrollregion=(0, 0, 0, 0))
         self.scrollitems.grid(row=0, column=0, sticky="nesw")
-        theme_manager.register_item("ctr", self.scrollitems)
         self.scrollitems.grid_columnconfigure(0, weight=1)
+        theme_manager.register_item("bgr", self.scrollitems)
+        theme_manager.register_item("hbgr", self.scrollitems)
+        # Register scrollbar for scrolling through items
         self.scrollbar = tk.Scrollbar(self, orient="vertical")
         self.scrollbar.grid(row=0, column=1, sticky="nesw")
+        # Bind scrollbar to frame
+        self.scrollbar.config(command=self.scrollitems.yview)
+        self.scrollitems.config(yscrollcommand=self.scrollbar.set)
+        # Bind self theme manager
+        self.theme_manager = theme_manager
 
+    # Function to add multiple videos
     def add_videos(self, videos):
+        # Iterate and call add video for all in the array
         for video in videos:
             self.add_video(video)
 
+    # Function to add a video
     def add_video(self, video):
-        self.videos.append(video)
-        # TODO: Add video render here
+        # Add video to the array
+        video_input = iomanager.VideoInput(video)
+        self.videos.append(video_input)
+        # Get videos count
+        count = len(self.videos)
+        # Create video render
+        y1 = (count * self.render_height) - self.render_height
+        if (count > 1):
+            y1 += (count - 1) * 4
+        # Render draw box
+        self.scrollitems.create_rectangle(0, y1, self.scrollitems.winfo_width(), y1 + 100, fill=self.theme_manager.current_theme._cntrcolor, outline="")
+        # Render video text
+        self.scrollitems.create_text(10, y1 + 10, fill=self.theme_manager.current_theme._txtcolor, text="Video: " + video, anchor="w")
+        self.scrollitems.create_text(10, y1 + 24, fill=self.theme_manager.current_theme._txtcolor, text="Length: " + video_input.video_length_str, anchor="w")
+        # Configure scroll item height
+        self.scrollitems.config(scrollregion=(0, 0, 0, (count * (self.render_height + self.render_spacing)) - self.render_spacing))
 
+    # Function to remove a video
     def remove_video(self, video):
+        # Remove video from the array
         self.videos.remove(video)
         # TODO: Remove video render here
 
+    # Function to clear the videos
     def clear_videos(self):
+        # Clear array
         self.videos = []
-        # TODO: Remove all video renders here
+        # Clear the video render drawings
+        self.scrollitems.delete("all")
 
+    # Function to get the videos
     def get_videos(self):
         return self.videos
 
