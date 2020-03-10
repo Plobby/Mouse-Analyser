@@ -95,6 +95,14 @@ class dataGraph():
             print(barValues)
             print(xValues)
             useList = []
+            highestValues = barValues[0]
+            rotator = 0
+
+            for barList in barValues:
+                for item in barList:
+                    if item > highestValues[rotator]:
+                        highestValues[rotator] = item
+                rotator = 0
 
             stackValue = 0;
             use = plt.bar(xValues,barValues[0])
@@ -103,7 +111,7 @@ class dataGraph():
             print(len(barValues))
 
             while stackValue < len(barValues)-1:
-                use = plt.bar(xValues,barValues[stackValue+1], bottom = barValues[stackValue])
+                use = plt.bar(xValues,barValues[stackValue+1], bottom = highestValues)
                 useList.append(use)
                 stackValue += 1
 
