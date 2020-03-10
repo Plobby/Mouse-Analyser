@@ -361,7 +361,7 @@ class VideoPlayer(tk.Frame):
         theme_manager.register_item("bgr", self.controls_play)
         theme_manager.register_item("abgr", self.controls_play)
         # Create player trackbar
-        self.controls_trackbar = VideoTrackbar(self.controls_frame, theme_manager)
+        self.controls_trackbar = VideoTrackbar(self.controls_frame, theme_manager, self)
         self.controls_trackbar.grid(row=1, column=0, sticky="nesw")
         # Bind hover events
         self.controls_play.bind("<Enter>", self.play_hover)
@@ -440,6 +440,12 @@ class VideoPlayer(tk.Frame):
             self.source = None
             self.source_input = None
 
+    def start_time_change(self):
+        print("Start time change")
+
+    def end_time_change(self):
+        print("End time change")
+
     # Function to draw a frame
     def _draw_frame(self, target):
         # Return if not playing
@@ -477,12 +483,16 @@ class VideoPlayer(tk.Frame):
 
 class VideoTrackbar(tk.Canvas):
     # Variables
+    player = None
     current_frame = 0
     end_frame = 0
     percent = 0
+    mousedown = False
 
     # Constructor
-    def __init__(self, parent, theme_manager):
+    def __init__(self, parent, theme_manager, player):
+        # Bind parent
+        self.player = player
         # Call superclass constructor
         tk.Canvas.__init__(self, parent, highlightthickness=0, height=30)
         theme_manager.register_item("bgr", self)
@@ -509,33 +519,67 @@ class VideoTrackbar(tk.Canvas):
     def redraw(self):
         # Check if the current frame and end frame are both zero - if so, no video is playing
         if (self.current_frame == 0 and self.end_frame == 0):
-            # Draw full empty bar
-            self.coords(self.bar_start, 5, 12, 5, 18)
-            # Draw trackbar pointer
-            self.coords(self.tracker_outer, 1, 8, 15, 22)
-            self.coords(self.tracker_inner, 3, 10, 13, 20)
+            self._draw_pointer(0)
         else:
             # Calculate current point from percentage
             point = self.w * self.percent
-            # Draw filled portion of bar
-            self.coords(self.bar_start, 5, 12, point, 18)
-            # Draw trackbar pointer
-            self.coords(self.tracker_outer, point, 8, point + 14, 22)
-            self.coords(self.tracker_inner, point + 2, 10, point + 12, 20)
+            self._draw_pointer(point)
+
+    # Function for when the mouse is pressed down
+    def mouse_down(self, event):
+        # Check if the video player has a source
+        if (self.player.source is None):
+            return
+        # Get the bar coordinates
+        bar = self.coords(self.bar_end)
+        # Check if the click was on the bar
+        if (event.x >= bar[0] and event.x <= bar[2] and event.y >= bar[1] and event.y <= bar[3]):
+            self.mousedown = True
+            self._draw_pointer(event.x)
+
+    # Function for when the mouse is released
+    def mouse_up(self, event):
+        # Set to false
+        self.mousedown = False
+
+    # Function for when the mouse is dragged
+    def mouse_drag(self, event):
+        # Return if mouse is not pressed down
+        if (not self.mousedown):
+            return
+        # Get the bar coordinates
+        bar = self.coords(self.bar_end)
+        # Check if the click was within valid x bounds
+        if (event.x >= bar[0] and event.x <= bar[2]):
+            self._draw_pointer(event.x)
 
     # Function for when the canvas is resized
     def _resize(self, event):
         # Get the new width
         self.w = event.width - 10
+        # Delete previous elements
+        self.delete("all")
         # Draw full empty bar
         self.bar_end = self.create_rectangle(5, 12, self.w, 18, fill="blue")
         self.bar_start = self.create_rectangle(5, 12, self.w, 18, fill="red")
         # Draw trackbar pointer
         self.tracker_outer = self.create_oval(1, 8, 15, 22, fill="orange")
         self.tracker_inner = self.create_oval(3, 10, 13, 20, fill="green")
+        # Add callback events for trackbar srolling
+        self.bind("<Button-1>", self.mouse_down)
+        self.bind("<ButtonRelease-1>", self.mouse_up)
+        self.bind("<Motion>", self.mouse_drag)
         # TODO: Fill based on theme
         # Redraw the progress
         self.redraw()
+    
+    # Function to draw the pointer at the specified location
+    def _draw_pointer(self, x):
+        # Draw filled portion of bar
+        self.coords(self.bar_start, 5, 12, x, 18)
+        # Draw trackbar pointer
+        self.coords(self.tracker_outer, x - 7, 8, x + 7, 22)
+        self.coords(self.tracker_inner, x - 5, 10, x + 5, 20)
 
 # - APP ITEMS
 class AppToolbar(tk.Frame):
