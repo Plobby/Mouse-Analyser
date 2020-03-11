@@ -48,10 +48,10 @@ def save_videos(videoCaps, outputLocation):
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH)) #Get frame width
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get frame height
         fps = int(video.get(cv2.CAP_PROP_FPS)) #Get video fps
-        fourcc = int(cv2.VideoWriter_fourcc(*'mpg1')) #Fourcc code for writing .mpg video files
+        fourcc = int(cv2.VideoWriter_fourcc(*'mp4v')) #Fourcc code for writing .mp4 video files
 
         #Concatenate outputLocation with output--fileIndex--.mpg
-        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mpg"
+        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mp4"
         #Create VideoWriter object using specs of the video being saved
         out = cv2.VideoWriter(fileLocation, fourcc, fps, (width, height))
 

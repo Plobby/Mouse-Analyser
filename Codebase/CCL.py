@@ -44,9 +44,12 @@ def CCL(inpFrame):
 
 """Function to iterate over image until an un-labelled foreground pixel is found"""
 def findNewObject(inpFrame, labelled):
+    xRange = range(inpFrame.shape[0])
+    yRange = range(inpFrame.shape[1])
+
     #Iterate over the image until a foreground pixel is found
-    for x in range(inpFrame.shape[0]):
-        for y in range(inpFrame.shape[1]):
+    for x, _ in enumerate(xRange):
+        for y, __ in enumerate(yRange):
             #Check if pixel is white (255)
             if inpFrame[x, y] == 255:
                 #Check that the pixel is not already labelled

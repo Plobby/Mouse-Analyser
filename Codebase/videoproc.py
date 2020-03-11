@@ -4,6 +4,7 @@ import threading
 import iomanager
 import Segmentation as seg
 import CCL
+import time
 
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
@@ -27,8 +28,12 @@ def processVideo(videoSource, doSaveVid):
 
     #Step through frames of video
     while video.isOpened():
+        startTime = time.time()
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
+        #Set default bounding box in case no bounding box is ever found
+        frameBoundingBoxes[framePos] = [0, 0, 0, 0]
+
         #Calculate bounding box size for mouse in frame
         boundingBox = processFrame(frame, videoThreshold)
 
@@ -38,12 +43,16 @@ def processVideo(videoSource, doSaveVid):
         #Else use the bounding box of the current frame as the bounding box for any unprocessed frames before it
         else:
             while len(unprocessed) > 0:
-                frameBoundingBoxes[unprocessed.pop(0)] = boundingBox   
+                frameBoundingBoxes[unprocessed.pop(0)] = boundingBox
             #Add current frame's bounding box to frameBoundingBoxes
             frameBoundingBoxes[framePos] = boundingBox
 
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
+        
+        stopTime = time.time()
+        print("frame" + str(framePos) + "time elapsed: " + str(stopTime - startTime))
+
         #Break while loop if return flag is false
         if not ret:
             break
@@ -124,11 +133,9 @@ def processFrame(frame, threshold):
     objects = CCL.CCL(segmented)
     
     #Create array to hold sorted objects keys
-    sortedKeys = []
-    
-    #Sort keys of objects in reverse order by length of array associated with each key
-    for key in sorted(objects, key=lambda k: len(objects[k]), reverse=True):
-        sortedKeys.append(key) 
+    sortedKeys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)
+
+    len(sortedKeys)
     
     #Set targetObject to the 2nd largest object in frame (assuming feed station is largest, mouse 2nd largest)
     targetObject = sortedKeys[1]
@@ -149,4 +156,20 @@ def processFrame(frame, threshold):
         if coord[1] > MaxY:
             MaxY = coord[1]
 
+    #Apply heuristics to find invalid bounding boxes and return None
+    
+    #Height/width is too great
+    if (((MaxX - MinX) / (MaxY - MinY)) > 4):
+        return None
+    #Width/height is too great
+    if (((MaxY - MinY) / (MaxX - MaxY)) > 4):
+        return None
+    #Absolute height is too great
+    if (MaxX - MinX > frame.shape[0] / 4):
+        return None
+    #Absolute width is too great
+    if (MaxY - MinY > frame.shape[1] / 4):
+        return None
+
+    #Return bounding box information
     return MinX, MaxX, MinY, MaxY
