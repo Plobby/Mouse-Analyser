@@ -350,6 +350,13 @@ class SettingsPage(tk.Frame):
             with open('config.ini', 'w') as f:
                 self.config.write(f)
     def togglebuttons(self):
+        outputLocation = self.config.get('General', 'OutputPath')
+        print(os.path.exists(outputLocation))
+        if not os.path.exists(outputLocation):
+            self.config.set("General", "OutputPath", 'No Valid File Path Detected ')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+            self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
         Variable = self.config.get('Video', 'video_type')
         if Variable == "Raw":
             self.LB2.select()
@@ -384,7 +391,7 @@ class SettingsPage(tk.Frame):
         if Variable == "64":
             self.LB8.select()
         if Variable == "128":
-            self.LB9.select()    
+            self.LB9.select()
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
