@@ -1,0 +1,221 @@
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/* Above is code used for resetting browser's */
+/* default settings that some browsers set */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/*  */
+/* Index page styling */
+body{
+  background: var(--gainsboro);
+  font-family: "Open Sans", sans-serif;
+}
+
+.index{
+	display: grid;
+	grid-gap: 20px;
+	min-height: 0;
+	min-width: 0;
+	grid-row: 1fr;
+	grid-template-areas:
+	"menu menu"
+	"title title"
+	"info1 info2"
+	"info1 info2";
+}
+.index-menu{
+	grid-area: menu;
+}
+
+.index-title{
+	grid-area: title;
+}
+
+.index-info1{
+	grid-area: info1;
+}
+
+.index-info2{
+	grid-area: info2;
+}
+
+:root{
+	--orange: #FC6B3D;
+	--lightblue:#64c1e3;
+	--white:#ffffff;
+	--gunmetal:#1C222D;
+	--gainsboro:#181818;
+}
+
+.nav-menu{
+	width: 100%;
+  background:var(--gunmetal);
+  font-size: 24px;
+  display: block;
+  text-align: center;
+	position: relative;
+	transition: transform 300ms;
+}
+
+
+.nav-menu ul{
+  display: flex;
+  padding-left: 30px;
+  width: 80%;
+}
+
+.nav-menu li{
+  list-style: none;
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.nav-menu li a{
+  display: inline-block;
+  padding: 10px;
+  text-decoration: none;
+  color: var(--white);
+}
+
+.nav-menu li:hover{
+  background: var(--orange);
+	box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+	transform: scale(1.1)
+}
+
+.nav-menu a{
+  display: block;
+	width: 225px;
+	height: 100%;
+}
+
+  strong{
+    color: var(--lightblue);
+  }
+
+
+	label{
+	  margin: 0;
+	  font-size: 30px;
+	  width: 26px;
+	  float: right;
+		display: none;
+	}
+
+	#toggle{
+	  display: none;
+	}
+
+
+.img-logo{
+    height: auto;
+    width: auto;
+    max-height: 84px;
+    max-width: 250px;
+    float: left;
+}
+
+
+.content p{
+  color: var(--white);
+  border: 2px solid var(--orange);
+  font-size: 16px;
+  line-height: 25px;
+  padding: 5px 20px;
+  margin: 5px 30px;
+	width: 700px;
+	height: 140px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 20px;
+}
+
+.index-title h1{
+  padding: 20px 20px 20px;
+	margin: 0px 20px;
+  font-size: 36px;
+  line-height: 60px;
+  color: var(--white);
+  text-align: center;
+  border: 5px solid var(--orange);
+}
+
+
+.content h2{
+  padding: 20px 20px 10px;
+	text-align: center;
+  font-size: 24px;
+  line-height: 44px;
+  color: var(--white);
+}
+
