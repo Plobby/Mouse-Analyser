@@ -162,7 +162,16 @@ class DataPage(tk.Frame):
         mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
         #graphFigure = graphGenerator.createBasicBarChart(graphFigure, xLabels, yValues)
-        graphFigure = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+        graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+
+        myPlot.set_facecolor(color_background)
+        myPlot.tick_params(labelcolor=color_text, color=color_container)
+        for spine in myPlot.spines.values():
+            spine.set_edgecolor(color_container)
+
+        myPlot.set_xlabel("Time (s)", color = color_text)
+        myPlot.set_ylabel("Activity per Division", color =  color_text)
+
 
         canvas1 = FigureCanvasTkAgg(graphFigure, self)
         canvas1.draw()

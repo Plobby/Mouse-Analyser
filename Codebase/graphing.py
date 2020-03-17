@@ -41,6 +41,7 @@ class dataGraph():
         return f
 
     def createStackedBarChart(self,f,timeGapPerReportedPosition,timePeriodPerBar,positionMeaning,positionList):
+        innerPlot = f.add_subplot(1,1,1)
         indexDict = []
         if timePeriodPerBar > timeGapPerReportedPosition: # The time period per bar *must* be larger than the gap that the positions are reported in - else the program will break.
             # First job is to seperate positionList into meanings.
@@ -110,16 +111,12 @@ class dataGraph():
 
             print(len(barValues))
 
-            while stackValue < len(barValues)-1:
+            while stackValue < len(barValues)-1: # This section creates the actual graph.
                 use = plt.bar(xValues,barValues[stackValue+1], bottom = highestValues)
                 useList.append(use)
                 stackValue += 1
 
-
-
-
-
-
+            plt.legend(useList,positionMeaning)
 
 
         else:
@@ -132,7 +129,9 @@ class dataGraph():
             popmessage.mainloop()
             '''
 
-        return f
+        return f, innerPlot
+
+
 
 
 
@@ -148,9 +147,9 @@ if __name__ == "__main__":
     "Eating":1,
     "Moving":2,
     "Undefined":3}
-    mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
+    mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
-    newGraph = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
+    newGraph, myPlot = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
 
     plt.show()
     input()
