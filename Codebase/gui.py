@@ -92,9 +92,9 @@ class VideoPage(tk.Frame):
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
         # Load images
-        button_add = ImageTk.PhotoImage(file="Assets/ButtonAdd.png")
-        button_clear = ImageTk.PhotoImage(file="Assets/ButtonClear.png")
-        button_process = ImageTk.PhotoImage(file="Assets/ButtonProcess.png")
+        button_add = ImageTk.PhotoImage(file="../Assets/ButtonAdd.png")
+        button_clear = ImageTk.PhotoImage(file="../Assets/ButtonClear.png")
+        button_process = ImageTk.PhotoImage(file="../Assets/ButtonProcess.png")
         # Configure resizing
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)
@@ -151,14 +151,14 @@ class SettingsPage(tk.Frame):
         self.grid_columnconfigure(2, weight=1)
 
 
-        Yes = ImageTk.PhotoImage(file="Assets/ButtonYesGr.png")
-        No = ImageTk.PhotoImage(file="Assets/ButtonNoRed.png")
-        Open = ImageTk.PhotoImage(file="Assets/ButtonOpen.png")
+        Yes = ImageTk.PhotoImage(file="../Assets/ButtonYesGr.png")
+        No = ImageTk.PhotoImage(file="../Assets/ButtonNoRed.png")
+        Open = ImageTk.PhotoImage(file="../Assets/ButtonOpen.png")
         self.Open = Open
-        Path = ImageTk.PhotoImage(file="Assets/ButtonPath.png")
+        Path = ImageTk.PhotoImage(file="../Assets/ButtonPath.png")
         self.Path = Path
-        NoSelect = ImageTk.PhotoImage(file="Assets/ButtonNoSelect.png")
-        Select = ImageTk.PhotoImage(file="Assets/ButtonSelect.png")
+        NoSelect = ImageTk.PhotoImage(file="../Assets/ButtonNoSelect.png")
+        Select = ImageTk.PhotoImage(file="../Assets/ButtonSelect.png")
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         outputLocation = self.config.get('General', 'OutputPath')
@@ -258,7 +258,7 @@ class SettingsPage(tk.Frame):
     #Opens file path
     def OpenPath(self):
         self.config.read("config.ini")
-        output = self.config.get("Video", "OutputPath")
+        output = self.config.get("General", "OutputPath")
         subprocess.Popen(f'explorer {os.path.realpath(output)}')
     #Change config for Type of Video Generated
     def VideoType(self):
@@ -397,8 +397,8 @@ class MenuButton(tk.Button):
     active = False
 
     def __init__(self, parent, text, func):
-        self.tab = ImageTk.PhotoImage(file="Assets/Tab.png")
-        self.tab_active = ImageTk.PhotoImage(file="Assets/TabActive.png")
+        self.tab = ImageTk.PhotoImage(file="../Assets/Tab.png")
+        self.tab_active = ImageTk.PhotoImage(file="../Assets/TabActive.png")
         tk.Button.__init__(self, parent, image=self.tab, text=text, compound="center", command=func, bd=0, bg=color_container, activebackground=color_container, fg=color_text, font=("Rockwell", 16), pady=0, highlightthickness=0)
 
         self.bind("<Enter>", self.on_enter)
@@ -492,10 +492,10 @@ class VideoPlayer(tk.Frame):
         # Create read buffer
         self.buffer = Queue(maxsize=128)
         # Load images
-        self.play_image = ImageTk.PhotoImage(file="Assets/ButtonPlay.png")
-        self.play_image_hover = ImageTk.PhotoImage(file="Assets/ButtonPlayHover.png")
-        self.pause_image = ImageTk.PhotoImage(file="Assets/ButtonPause.png")
-        self.pause_image_hover = ImageTk.PhotoImage(file="Assets/ButtonPauseHover.png")
+        self.play_image = ImageTk.PhotoImage(file="../Assets/ButtonPlay.png")
+        self.play_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPlayHover.png")
+        self.pause_image = ImageTk.PhotoImage(file="../Assets/ButtonPause.png")
+        self.pause_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPauseHover.png")
         # Call superclass constructor
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid_rowconfigure(0, weight=1)
@@ -636,7 +636,7 @@ class AppToolbar(tk.Frame):
         tk.Frame.__init__(self, parent, bg=color_container)
         self.grid(row=0, column=0, sticky="nesw", pady=(0, 4))
         # Load images
-        self.image_title = ImageTk.PhotoImage(file="Assets/TitleBarDark.png")
+        self.image_title = ImageTk.PhotoImage(file="../Assets/TitleBarDark.png")
         # Set grid values
         self.grid_rowconfigure(0, weight=0)
         self.grid_columnconfigure(0, weight=1)
