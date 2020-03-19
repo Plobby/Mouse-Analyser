@@ -7,12 +7,9 @@ import subprocess
 import os
 import cv2 as cv2
 import time
-
-
 from threading import Timer
 from queue import Queue, Empty
 
-# Colour variables
 color_background = "#202020"
 color_hover = "#2B2B2B"
 color_container = "#383838"
@@ -37,6 +34,7 @@ class App(tk.Tk):
     data_page = None
     settings_page = None
     status_bar = None
+    theme_manager = None
 
     # Constructor
     def __init__(self, *args, **kwargs):
@@ -49,6 +47,7 @@ class App(tk.Tk):
         self.grid_columnconfigure(0, weight=1)
         # Configure appearance
         self.title("MouseHUB")
+        self.iconbitmap("../Assets/IconLarge.ico")
         self.geometry("1280x720")
         self.minsize(780, 520)
         # Create frame view
@@ -66,6 +65,12 @@ class App(tk.Tk):
         self.status_bar = AppStatusBar(self, "Copyright: \xa9 MouseHUB 2020.")
         # Show the first frame
         self.video_page.tkraise()
+        # Create new theme manager
+        self.theme_manager = ThemeManager(self)
+        self.theme_manager.register_theme(Theme("Dark", "#202020", "#2B2B2B", "#383838", "#D4D4D4"))
+        self.theme_manager.register_theme(Theme("Light", "#EDEDED", "#76CBE3", "#F5F5F5", "#009696"))
+        self.theme_manager.register_theme(Theme("Debug", "#000FFF", "#00FF00", "#FFF100", "#FF0000"))
+        self.theme_manager.apply_last_theme()
         # Register window close event
         self.protocol("WM_DELETE_WINDOW", self.close)
         # Start the main app loop
@@ -134,15 +139,16 @@ class VideoPage(tk.Frame):
     # Function to process the user selected videos
     def process_videos(self):
         videos = self.video_queue.get_videos()
+        # TODO: Process videos here
 
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Call superclass function
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
 
 class SettingsPage(tk.Frame):
-    def __init__(self,parent):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
         #Configuring rows
@@ -162,10 +168,10 @@ class SettingsPage(tk.Frame):
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         outputLocation = self.config.get('General', 'OutputPath')
-
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self,bg=color_background)
         settings_frame.grid(row=0,column=1,sticky="nesw")
+
         #General Settings
         GeneralLabel = tk.Label(self, text="General Settings", bg=color_background, fg="White", font=("Rockwell",20)).grid(row=0,column=0,sticky="w",pady=10,padx=10)
         #Change Directory / Open Output Location
@@ -411,7 +417,10 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-
+    
+    def reConfigure(self, newBG, newFontColor):
+        self.config(bg=newBG, fg=newFontColor)
+    
     def set_active(self, state):
         self.active = state
         if (self.active):
@@ -683,6 +692,8 @@ class AppPageView(tk.Frame):
         self.grid(column=0, row=1, sticky="nesw")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        # Assign parent
+        self.app = parent
 
     # Function to add a page to the view
     def add_page(self, pagetype):
@@ -716,3 +727,78 @@ class AppStatusBar(tk.Frame):
     # Function to get the status
     def get_status(self):
         return self.status
+
+# - THEME ITEMS
+class Theme:
+    def __init__(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self._name = name
+        self._bgcolor = bgcolor
+        self._hvrcolor = hvrcolor
+        self._cntrcolor = cntrcolor
+        self._txtcolor = txtcolor
+
+    def title(self):
+        return self._name
+
+    def background(self):
+        return self._bgcolor
+
+    def hover(self):
+        return self._hvrcolor
+
+    def container(self):
+        return self._cntrcolor
+
+    def text(self):
+        return self._txtcolor
+
+    def change_theme(self, name, bgcolor, hvrcolor, cntrcolor, txtcolor):
+        self.__init__(name, bgcolor, hvrcolor, cntrcolor, txtcolor)
+
+class ThemeManager:
+    themes = []
+    current_theme_index = 0
+    current_theme = None
+    container = None
+
+    def __init__(self, container):
+        self.themes = []
+        self.current_theme_index = 0
+        self.container = container
+
+    def register_theme(self, theme):
+        self.themes.append(theme)
+
+    def rotate_theme(self):
+        if (self.current_theme_index < (len(self.themes) - 1)):
+            self.current_theme_index += 1
+        else:
+            self.current_theme_index = 0
+        self.apply_theme(self.themes[self.current_theme_index])
+        return self.themes[self.current_theme_index]._name
+
+    def apply_theme(self, theme):
+        # For every widget in the parent (aka the whole interface)...
+        for widget in self.container.winfo_children():
+            widget.configure(bg=theme._bgcolor)
+            #widget.configure(fg=themeTextDict[self.themeList[currentThemeIndex]])
+            widget.configure()
+            if (type(widget)==MenuButton):
+                print("MenuButton found!")
+                #widget.reConfigure(themeBackDict[self.themeList[currentThemeIndex]],themeTextDict[self.themeList[currentThemeIndex]])
+            if (type(widget)==tk.Frame):
+                widget.configure(bg=theme._cntrcolor)
+
+    def apply_last_theme(self):
+        settings = self.get_last_theme()
+        self.apply_theme(Theme(settings[0],settings[1],settings[2],settings[3],settings[4]))
+
+    # Open the settings file and load the last used/default theme.
+    def get_last_theme(self):
+        settingsFile = open('../settings.txt', 'r+')
+        settings = []
+        line = ""
+        for line in settingsFile:
+            settings.append(line.strip('\n'))
+        settingsFile.close()
+        return settings
