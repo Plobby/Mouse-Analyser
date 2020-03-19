@@ -1,6 +1,10 @@
 import tkinter as tk
+from tkinter import filedialog
 import iomanager
 from PIL import ImageTk, Image
+import configparser
+import subprocess
+import os
 import cv2 as cv2
 import time
 from threading import Timer
@@ -17,7 +21,6 @@ load.withdraw()
 
 # Global variable to store app instance
 app = None
-
 # Function to show the GUI
 def show_window():
     # Create a new app instance
@@ -148,41 +151,253 @@ class SettingsPage(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg=color_background)
         self.grid(row=0, column=0, sticky="nesw")
-        # Configuring rows
+        #Configuring rows
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
 
-        # Bind parent
-        self.app = parent.app
 
+        Yes = ImageTk.PhotoImage(file="../Assets/ButtonYesGr.png")
+        No = ImageTk.PhotoImage(file="../Assets/ButtonNoRed.png")
+        Open = ImageTk.PhotoImage(file="../Assets/ButtonOpen.png")
+        self.Open = Open
+        Path = ImageTk.PhotoImage(file="../Assets/ButtonPath.png")
+        self.Path = Path
+        NoSelect = ImageTk.PhotoImage(file="../Assets/ButtonNoSelect.png")
+        Select = ImageTk.PhotoImage(file="../Assets/ButtonSelect.png")
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        outputLocation = self.config.get('General', 'OutputPath')
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self,bg=color_background)
         settings_frame.grid(row=0,column=1,sticky="nesw")
-        self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command=self.rotate_theme)
-        self.change_theme_button.config(bg=color_container, fg=color_text,font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
-        self.change_theme_button.grid(row=0,column=0,pady=4)
 
-        self.tkvar = tk.StringVar(load)
+        #General Settings
+        GeneralLabel = tk.Label(self, text="General Settings", bg=color_background, fg="White", font=("Rockwell",20)).grid(row=0,column=0,sticky="w",pady=10,padx=10)
+        #Change Directory / Open Output Location
+        self.OutputLocationLabel = tk.Label(self,text="Output Directory - " + outputLocation, bg=color_background, fg="White", font=("Rockwell",13))
+        self.OutputLocationLabel.grid(row=1,column=0,sticky="w",padx=10)
+        OutputButton = tk.Button(self, command=self.SetDirectory, image=Path, compound="left" ,bg=color_background, highlightbackground=color_background, highlightthickness=0, bd=0,activebackground=color_background)
+        OutputButton.grid(row=2,column=0,sticky="w",padx=10)
+        OpenButton = tk.Button(self, command=self.OpenPath, image=Open, compound="left" ,bg=color_background, highlightbackground=color_background, highlightthickness=0, bd=0,activebackground=color_background)
+        OpenButton.grid(row=2,column=0,sticky="w",padx=120)
 
-        # Dictionary with options
-        choices = { 'Dark','Light','Debug'}
-        self.tkvar.set('Dark') # set the default option
-        # link function to change dropdown
-        self.tkvar.trace('w', self.change_dropdown)
+        ThemeLabel= tk.Label(self, text="Client Theme", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=3, column=0, sticky='w',padx=10,pady=10)
+        self.ti = tk.IntVar()
+        self.TB1 = RadioButton(self,"Light",NoSelect,Select,self.ThemeSave,self.ti,1)
+        self.TB1.grid(row=4, column=0, sticky='w',padx=10)
+        self.TB3 = RadioButton(self,"Dark",NoSelect,Select,self.ThemeSave,self.ti,2)
+        self.TB3.grid(row=4, column=0, sticky='w', padx=110)
+        self.TB4 = RadioButton(self,"Debug",NoSelect,Select,self.ThemeSave,self.ti,3)
+        self.TB4.grid(row=4, column=0, sticky='w', padx=210)
+        #Video Settings
+        VideoLabel = tk.Label(self, text="Video Settings", bg=color_background, fg="White", font=("Rockwell",20)).grid(row=5,column=0,sticky="w",pady=10,padx=10)
+        #SaveVideo - Yes/No
+        SaveLabel= tk.Label(self, text="Generate Video File", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=6, column=0, sticky='w',padx=10,pady=10)
+        self.SVB = tk.IntVar()
+        self.LB1 = CheckButton(self,Yes,No,self.GenerateVideo, self.SVB)
+        self.LB1.grid(row=7,column=0,sticky="w",padx=10)
+        #Video Type RadioButton
+        VideoTypeLabel = tk.Label(self, text="Video Type", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=8, column=0,sticky='w', padx=10,pady=10)
+        self.v = tk.IntVar()
+        self.LB2 = RadioButton(self,"Raw",NoSelect,Select,self.VideoType,self.v,1)
+        self.LB2.grid(row=9, column=0, sticky='w',padx=10)
+        self.LB3 = RadioButton(self,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
+        self.LB3.grid(row=9, column=0, sticky='w', padx=110)
+        self.LB4 = RadioButton(self,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
+        self.LB4.grid(row=9, column=0, sticky='w', padx=210)
+        #Bounding Box - Yes/No
+        BoundingBoxLabel = tk.Label(self, text="Bounding Box", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=10,column=0,sticky='w',padx=10,pady=10)
+        self.BBI = tk.IntVar()
+        self.LB5 = CheckButton(self, Yes,No,self.BoundingBox,self.BBI)
+        self.LB5.grid(row=11, column=0, sticky="w", padx=10)
+        BoundingBoxLabel = tk.Label(self, text="Playback Buffer Size", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=12,column=0,sticky='w',padx=10,pady=10)
+        #Playback Buzzer Size RadioButton
+        self.BS = tk.IntVar()
+        self.LB6 = RadioButton(self,"16",NoSelect,Select,self.BufferSize,self.BS,1)
+        self.LB6.grid(row=13, column=0,sticky="w",padx=10)
+        self.LB7 = RadioButton(self,"32",NoSelect,Select,self.BufferSize,self.BS,2)
+        self.LB7.grid(row=13, column=0,sticky="w",padx=110)
+        self.LB8 = RadioButton(self,"64",NoSelect,Select,self.BufferSize,self.BS,3)
+        self.LB8.grid(row=13, column=0,sticky="w",padx=210)
+        self.LB9 = RadioButton(self,"128",NoSelect,Select,self.BufferSize,self.BS,4)
+        self.LB9.grid(row=13, column=0,sticky="w",padx=310)
+        #Data Settings
+        Data = tk.Label(self, text="Data Settings", bg=color_background, fg="White", font=("Rockwell",20), pady=20).grid(row=0,column=1,sticky="w")
+        #Mouse Tracking Setting - Yes/No
+        MouseTrackingLabel = tk.Label(self, text="Mouse Position", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=1,column=1, sticky="w", pady=10)
+        self.MTI = tk.IntVar()
+        self.RB1 = CheckButton(self, Yes,No, self.MouseTracking,self.MTI)
+        self.RB1.grid(row=2,column=1, sticky="w")
+        #Pose Estimations /Mouse Behaviour
+        MouseBehaviourLabel = tk.Label(self, text="Mouse Behaviour", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=3,column=1, sticky="w",pady=10)
+        self.MBI = tk.IntVar()
+        self.RB2 = CheckButton(self, Yes,No, self.MouseBehaviour,self.MBI)
+        self.RB2.grid(row=4,column=1, sticky="w")
 
-        popupMenu = tk.OptionMenu(self, self.tkvar, *choices)
-        tk.Label(self,bg=color_background, fg=color_text, text="Choose a theme!").grid(row = 1, column = 1)
-        popupMenu.grid(row = 2, column =1)
+        self.togglebuttons()
 
-    def rotate_theme(self):
-        name = self.app.theme_manager.rotate_theme()
-        self.change_theme_button.config(text="Theme: " + name)
-        
-    # on change dropdown value
-    def change_dropdown(self, *args):
-        print(self.tkvar.get())
 
+
+    # Set Saved Video Directory and Display Label
+    def SetDirectory(self):
+        outputLocation = filedialog.askdirectory()
+        if outputLocation == "":
+            print("error")
+        else:
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            config.set("General", "OutputPath", outputLocation)
+            with open('config.ini', 'w') as f:
+                config.write(f)
+            self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
+    #Set the Generate Video config
+    def GenerateVideo(self):
+        self.config.read("config.ini")
+        v = self.SVB.get()
+        if v == 1:
+            self.config.set("Video", "Generate_Video", "0")
+        elif v == 0:
+            self.config.set("Video", "Generate_Video", "1")
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+    #Opens file path
+    def OpenPath(self):
+        self.config.read("config.ini")
+        output = self.config.get("General", "OutputPath")
+        subprocess.Popen(f'explorer {os.path.realpath(output)}')
+    #Change config for Type of Video Generated
+    def VideoType(self):
+        v = self.v.get()
+        if v == 1:
+            self.config.read("config.ini")
+            self.config.set("Video", "Video_Type", 'Raw')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if v == 2:
+            self.config.read("config.ini")
+            self.config.set("Video", "Video_Type", 'Greyscale')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if v == 3:
+            self.config.read("config.ini")
+            self.config.set("Video", "Video_Type", 'Mouse')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+    #Changes config for bounding box in Video to Yes
+    def BoundingBox(self):
+        self.config.read("config.ini")
+        v = self.BBI.get()
+        print(v)
+        if v == 1:
+            self.config.set("Video", "Bounding_Box", "0")
+        elif v == 0:
+            self.config.set("Video", "Bounding_Box", "1")
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+    #Changes config for playback buffer size
+    def BufferSize(self):
+        bs = self.BS.get()
+        if bs == 1:
+            self.config.read("config.ini")
+            self.config.set("Video", "Buffer_Size", '16')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if bs == 2:
+            self.config.read("config.ini")
+            self.config.set("Video", "Buffer_Size", '32')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if bs == 3:
+            self.config.read("config.ini")
+            self.config.set("Video", "Buffer_Size", '64')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if bs == 4:
+            self.config.read("config.ini")
+            self.config.set("Video", "Buffer_Size", '128')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+    #Changes config for mouse location tracking
+    def MouseTracking(self):
+        self.config.read("config.ini")
+        v = self.MTI.get()
+        if v == 1:
+            self.config.set("Data", "Tracking_Data", "0")
+        elif v == 0:
+            self.config.set("Data", "Tracking_Data", "1")
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+    #Changes config for post estimation
+    def MouseBehaviour(self):
+        self.config.read("config.ini")
+        v = self.MBI.get()
+        if v == 1:
+            self.config.set("Data", "Behaviour_Data", "0")
+        elif v == 0:
+            self.config.set("Data", "Behaviour_Data", "1")
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+    def ThemeSave(self):
+        v = self.ti.get()
+        if v == 1:
+            self.config.read("config.ini")
+            self.config.set("General", "Theme", 'Light')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if v == 2:
+            self.config.read("config.ini")
+            self.config.set("General", "Theme", 'Dark')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+        if v == 3:
+            self.config.read("config.ini")
+            self.config.set("General", "Theme", 'Debug')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+    def togglebuttons(self):
+        outputLocation = self.config.get('General', 'OutputPath')
+        print(os.path.exists(outputLocation))
+        if not os.path.exists(outputLocation):
+            self.config.set("General", "OutputPath", 'No Valid File Path Detected ')
+            with open('config.ini', 'w') as f:
+                self.config.write(f)
+            self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
+        Variable = self.config.get('Video', 'video_type')
+        if Variable == "Raw":
+            self.LB2.select()
+        if Variable == "Greyscale":
+            self.LB3.select()
+        if Variable == "Mouse":
+            self.LB4.select()
+        Variable = self.config.get('Video', 'Generate_Video')
+        if Variable == '0':
+            self.LB1.select()
+        Variable = self.config.get('Data', 'tracking_data')
+        if Variable == '0':
+            self.RB1.select()
+        Variable = self.config.get('Data', 'behaviour_data')
+        if Variable == '0':
+            self.RB2.select()
+        Variable = self.config.get('Video', 'bounding_box')
+        if Variable == '0':
+            self.LB5.select()
+        Variable = self.config.get('General', 'Theme')
+        if Variable == "Light":
+            self.TB1.select()
+        if Variable == "Dark":
+            self.TB3.select()
+        if Variable == "Debug":
+            self.TB4.select()
+        Variable = self.config.get('Video', 'buffer_size')
+        if Variable == "16":
+            self.LB6.select()
+        if Variable == "32":
+            self.LB7.select()
+        if Variable == "64":
+            self.LB8.select()
+        if Variable == "128":
+            self.LB9.select()
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
@@ -218,6 +433,16 @@ class IconButton(tk.Button):
         tk.Button.__init__(self, parent, image=image, compound="left", command=func, bd=0, bg=color_container, activebackground=color_container, padx=8, highlightthickness=0)
         self.image = image
 
+class CheckButton(tk.Checkbutton):
+    def __init__(self,parent,image,image1,func,var):
+        tk.Checkbutton.__init__(self,parent,image=image,variable=var,selectimage=image1, compound="left", command=func, bd=0, bg=color_background,selectcolor=color_background, activebackground=color_background,highlightbackground=color_background, highlightthickness=0, indicatoron=0)
+        self.image = image
+        self.image1 = image1
+class RadioButton(tk.Radiobutton):
+    def __init__(self,parent,text,image,image1,func,var,value):
+        tk.Radiobutton.__init__(self,parent,text=text,image=image,selectimage=image1,compound="center", variable=var,command=func,value=value, bd=0, bg=color_background,selectcolor=color_background, activebackground=color_background,highlightbackground=color_background, fg="white", font=("Rockwell", 14), pady=0, highlightthickness=0,indicatoron=0)
+        self.image = image
+        self.image1 = image1
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
     videos = []
@@ -358,7 +583,7 @@ class VideoPlayer(tk.Frame):
             timer = Timer(interval=self.source_input.frames_interval, function=self._draw_frame, args=[self.buffer])
             timer.daemon = True
             timer.start()
-    
+
     # Function to pause the video
     def pause(self):
         # Check a source is present
