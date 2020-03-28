@@ -49,10 +49,8 @@ def processVideo(videoSource, doSaveVid):
 
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
-        
-        stopTime = time.time()
-        print("frame" + str(framePos) + "time elapsed: " + str(stopTime - startTime))
 
+        print(str(framePos) + ": " + str(time.time() - startTime))
         #Break while loop if return flag is false
         if not ret:
             break
@@ -134,8 +132,6 @@ def processFrame(frame, threshold):
     
     #Create array to hold sorted objects keys
     sortedKeys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)
-
-    len(sortedKeys)
     
     #Set targetObject to the 2nd largest object in frame (assuming feed station is largest, mouse 2nd largest)
     targetObject = sortedKeys[1]

@@ -1,6 +1,7 @@
 import cv2
 import functools
 import numpy
+import numpy as np
 
 """ Implementation of Otsu's thresholding algorithm to find best threshold for a grayscale frame
 More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html """
@@ -61,7 +62,7 @@ def thresholdSegment(inpFrame, threshold):
     #Create a copy of inpFrame to be modified
     frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
 
-    #Percentages of x and y to not include in foreground
+    # #Percentages of x and y to not include in foreground
     borderPercentX = 0.1
     borderPercentY = 0.1
 
