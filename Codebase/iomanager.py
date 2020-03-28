@@ -52,10 +52,10 @@ def save_videos(videoCaps, outputLocation):
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH)) #Get frame width
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get frame height
         fps = int(video.get(cv2.CAP_PROP_FPS)) #Get video fps
-        fourcc = int(cv2.VideoWriter_fourcc(*'mpg1')) #Fourcc code for writing .mpg video files
+        fourcc = int(cv2.VideoWriter_fourcc(*'mp4v')) #Fourcc code for writing .mp4 video files
 
         #Concatenate outputLocation with output--fileIndex--.mpg
-        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mpg"
+        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mp4"
         #Create VideoWriter object using specs of the video being saved
         out = cv2.VideoWriter(fileLocation, fourcc, fps, (width, height))
 
@@ -117,6 +117,7 @@ class VideoInput():
         self.stopped = True
         self.cap.release()
     
+<<<<<<< HEAD
     def update(self, target):
         # Loop on thread
         while (not self.stopped):
@@ -143,3 +144,17 @@ class VideoInput():
         no_dp = "{:.0f}"
         self.progress = (self.frames_done / self.frames_total) * 100
         return "Frame " + no_dp.format(self.frames_done) + "/" + no_dp.format(self.frames_total) + "(" + one_dp.format(self.progress) + "%)"
+=======
+    def get_frame(self):
+        if (self.cap.isOpened()):
+            ret, frame = self.cap.read()
+            if (not ret):
+                self.close()
+                return None
+            # TODO: Process the frame properly here
+            frame = PIL.Image.fromarray(frame[0])
+            self.frames_done = self.frames_done + 1
+            return frame
+        self.close()
+        return None
+>>>>>>> videoProc

@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 import iomanager
 from PIL import ImageTk, Image
+<<<<<<< HEAD
 import configparser
 import subprocess
 import os
@@ -9,6 +10,11 @@ import cv2 as cv2
 import time
 from threading import Timer
 from queue import Queue, Empty
+=======
+import PIL
+import cv2
+import videoproc
+>>>>>>> videoProc
 
 color_background = "#202020"
 color_hover = "#2B2B2B"
