@@ -154,24 +154,29 @@ class DataPage(tk.Frame):
         graphFigure = plt.figure(facecolor=color_background) # Figure for graphing.
         graphGenerator = graph.dataGraph() # object to store datagraph in.
 
-        xLabels = {"Sleeping":0,
-        "Eating":1,
-        "Moving":2,
-        "Undefined":3}
+        xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
         yValues = [50,30,120,25]
         mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
-        #graphFigure = graphGenerator.createBasicBarChart(graphFigure, xLabels, yValues)
-        graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+        xLabels2 = [5,6,7,8,5,6]
+        yValues2 = [4,5,6,7,8,3]
 
-        myPlot.set_facecolor(color_background)
-        myPlot.tick_params(labelcolor=color_text, color=color_container)
-        for spine in myPlot.spines.values():
+        graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
+        #graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+
+        titleEntry = tk.Entry(self, bg = color_container, fg = color_text)
+        titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
+        setButton = tk.Button(self,bg = color_container, fg = color_text, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry,self.myPlot))
+        setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
+
+
+        self.myPlot.set_facecolor(color_background)
+        self.myPlot.tick_params(labelcolor=color_text, color=color_container)
+        for spine in self.myPlot.spines.values():
             spine.set_edgecolor(color_container)
 
-        myPlot.set_xlabel("Time (s)", color = color_text)
-        myPlot.set_ylabel("Activity per Division", color =  color_text)
-
+        self.myPlot.set_xlabel("Time (s)", color = color_text)
+        self.myPlot.set_ylabel("Activity per Division", color =  color_text)
 
         canvas1 = FigureCanvasTkAgg(graphFigure, self)
         canvas1.draw()
@@ -183,6 +188,12 @@ class DataPage(tk.Frame):
 
         canvas1.draw()
         canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+
+    def getAndSetTitle(self, titleEntry, myPlot):
+        title = titleEntry.get()
+        print(title)
+        myPlot.set_title(title, color = color_text)
+
 
 
 class SettingsPage(tk.Frame):

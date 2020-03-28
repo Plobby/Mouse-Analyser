@@ -34,11 +34,11 @@ class dataGraph():
         print("Data graph initialised.")
 
     def createBasicBarChart(self,f,barNames,barHeights): # If the barheights are already calculated.
-        f.add_subplot(1,1,1)
+        innerPlot = f.add_subplot(1,1,1)
 
         plt.bar(barNames,barHeights,align = 'center')
 
-        return f
+        return f, innerPlot
 
     def createStackedBarChart(self,f,timeGapPerReportedPosition,timePeriodPerBar,positionMeaning,positionList):
         innerPlot = f.add_subplot(1,1,1)
