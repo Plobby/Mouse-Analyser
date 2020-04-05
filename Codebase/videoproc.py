@@ -2,7 +2,7 @@ import cv2
 import threading
 
 import iomanager
-import Segmentation as seg
+import segmentation as seg
 import CCL
 import time
 

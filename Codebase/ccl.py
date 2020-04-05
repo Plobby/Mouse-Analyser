@@ -1,7 +1,7 @@
 import cv2
 import functools
 import numpy
-import Segmentation
+import segmentation
 from collections import deque
 from itertools import chain
 
