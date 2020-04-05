@@ -15,17 +15,26 @@ def CCL(inpFrame):
     #Initialise object label
     objectLabel = 1
 
-    #Create list to contain coordinates of all explored objects
+    #List to contain coordinates of all explored objects
     labelled = []
+    #List to contain valid searchPixels (initialised with top left-most pixel)
+    searchPixels = [(0, 0)]
+    minSearchX = 0
 
     #Continually look for and explore new objects in the frame
     while True:
         #Find an unexplored pixel (this indicates a new object in the frame)
-        searchPixel = findNewObject(inpFrame, labelled)
+        searchPixel = findNewObject(inpFrame, labelled, minSearchX)
 
         #Break while loop if no new pixel is found
         if searchPixel == None: 
             break
+
+        #Add searchPixel to searchPixels
+        searchPixels.append(searchPixel)
+
+        #Set minSearchX to highest X value in for searchPixels
+        minSearchX = max(searchPixels, key=lambda coord: coord[0])
 
         #Explore all pixels connected to searchPixel to find new object
         newObject = exploreObject(inpFrame, searchPixel)
@@ -41,8 +50,8 @@ def CCL(inpFrame):
     return objects
 
 """Function to iterate over image until an un-labelled foreground pixel is found"""
-def findNewObject(inpFrame, labelled):
-    xRange = range(inpFrame.shape[0])
+def findNewObject(inpFrame, labelled, xMin):
+    xRange = range(xMin, inpFrame.shape[0])
     yRange = range(inpFrame.shape[1])
 
     #Iterate over the image until a foreground pixel is found
