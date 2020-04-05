@@ -3,7 +3,7 @@ import threading
 
 import iomanager
 import segmentation as seg
-import CCL
+import ccl
 import time
 
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
