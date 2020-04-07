@@ -15,6 +15,7 @@ import cv2 as cv2
 import time
 from threading import Timer
 from queue import Queue, Empty
+import videoproc
 import graphing as graph # Import graphing under name graph
 
 # Load a tk window and widthdraw to allow images to be loaded
@@ -143,6 +144,7 @@ class VideoPage(tk.Frame):
     # Function to process the user selected videos
     def process_videos(self):
         videos = self.video_queue.get_videos()
+        videoproc.processVideo(videos[0], doSaveVid=True)
         # TODO: Process videos here
 
 class DataPage(tk.Frame):
