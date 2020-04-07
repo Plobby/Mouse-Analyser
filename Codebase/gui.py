@@ -1,6 +1,12 @@
 import tkinter as tk
 from tkinter import filedialog
 import iomanager
+import numpy
+import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+matplotlib.use("TkAgg")
 from PIL import ImageTk, Image
 import configparser
 import subprocess
@@ -9,6 +15,7 @@ import cv2 as cv2
 import time
 from threading import Timer
 from queue import Queue, Empty
+import graphing as graph # Import graphing under name graph
 
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
@@ -145,6 +152,51 @@ class DataPage(tk.Frame):
         self.grid(row=0, column=0, sticky="nesw")
         parent.app.theme_manager.register_item("bgr", self)
 
+        graphFigure = plt.figure(facecolor=color_background) # Figure for graphing.
+        graphGenerator = graph.dataGraph() # object to store datagraph in.
+
+        xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
+        yValues = [50,30,120,25]
+        mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
+
+        xLabels2 = [5,6,7,8,5,6]
+        yValues2 = [4,5,6,7,8,3]
+
+        graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
+        #graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+
+        titleEntry = tk.Entry(self, bg = color_container, fg = color_text)
+        titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
+        setButton = tk.Button(self,bg = color_container, fg = color_text, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry,self.myPlot))
+        setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
+
+
+        self.myPlot.set_facecolor(color_background)
+        self.myPlot.tick_params(labelcolor=color_text, color=color_container)
+        for spine in self.myPlot.spines.values():
+            spine.set_edgecolor(color_container)
+
+        self.myPlot.set_xlabel("Time (s)", color = color_text)
+        self.myPlot.set_ylabel("Activity per Division", color =  color_text)
+
+        canvas1 = FigureCanvasTkAgg(graphFigure, self)
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+
+
+    def showBarChart(self,graphFigure,graphGenerator,canvas1):
+        # Code to implement graph on canvas + page
+
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+
+    def getAndSetTitle(self, titleEntry, myPlot):
+        title = titleEntry.get()
+        print(title)
+        myPlot.set_title(title, color = color_text)
+
+
+
 class SettingsPage(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
@@ -259,7 +311,7 @@ class SettingsPage(tk.Frame):
     def rotate_theme(self):
         name = self.app.theme_manager.rotate_theme()
         self.change_theme_button.config(text="Theme: " + name)
-        
+
     # on change dropdown value
     def change_dropdown(self, *args):
         print(self.tkvar.get())
@@ -453,7 +505,10 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-    
+            
+    def reConfigure(self, newBG, newFontColor):
+        self.config(bg=newBG, fg=newFontColor)
+      
     def set_active(self, state):
         self.active = state
         if (self.active):
