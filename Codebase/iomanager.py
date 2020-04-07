@@ -8,6 +8,7 @@ from cli_logger import LogLevel
 from queue import Queue
 from threading import Thread
 import time
+import datetime
 
 # Variables
 valid_files = [("Video Files", ("*.mp4", "*.mpg", "*.avi")), ("MP4 Videos", "*.mp4"), ("MPEG Videos", "*.mpg"), ("AVI Videos", "*.avi")]
@@ -52,10 +53,10 @@ def save_videos(videoCaps, outputLocation):
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH)) #Get frame width
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)) #Get frame height
         fps = int(video.get(cv2.CAP_PROP_FPS)) #Get video fps
-        fourcc = int(cv2.VideoWriter_fourcc(*'mpg1')) #Fourcc code for writing .mpg video files
+        fourcc = int(cv2.VideoWriter_fourcc(*'mp4v')) #Fourcc code for writing .mp4 video files
 
         #Concatenate outputLocation with output--fileIndex--.mpg
-        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mpg"
+        fileLocation = outputLocation + "/output" + str(fileIndex) + ".mp4"
         #Create VideoWriter object using specs of the video being saved
         out = cv2.VideoWriter(fileLocation, fourcc, fps, (width, height))
 
@@ -83,18 +84,32 @@ class VideoInput():
     cap = None
     queue_size = None
     stopped = False
+    frames_fps = 0
     frames_interval = 0
     frames_done = 0
     frames_total = 0
     progress = 0
+    video_length = 0
+    video_length_str = ""
 
     def __init__(self, file, queue_size=128):
+        # Bind variables
         self.file = file
         self.stopped = False
         self.queue_size = queue_size
+        # Open video capture
         self.cap = cv2.VideoCapture(self.file)
+        # Get video properties
         self.frames_total = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.frames_interval = (1000 / self.cap.get(cv2.CAP_PROP_FPS)) / 1000
+        self.frames_fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.frames_interval = (1000 / self.frames_fps) / 1000
+        # Close video capture
+        self.cap.release()
+        self.cap = None
+        # Get video length
+        self.video_length = self.frames_total / self.frames_fps
+        # Convert video length to string
+        self.video_length_str = str(datetime.timedelta(seconds=self.video_length)).split(".")[0]
 
     def start(self, target):
         # Flag as not stopped
