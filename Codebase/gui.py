@@ -334,8 +334,16 @@ class SettingsPage(tk.Frame):
         v = self.SVB.get()
         if v == 1:
             self.config.set("Video", "Generate_Video", "0")
+            self.LB2.config(state="disabled")
+            self.LB3.config(state="disabled")
+            self.LB4.config(state="disabled")
+            self.LB5.config(state="disabled")
         elif v == 0:
             self.config.set("Video", "Generate_Video", "1")
+            self.LB2.config(state="normal")
+            self.LB3.config(state="normal")
+            self.LB4.config(state="normal")
+            self.LB5.config(state="normal")
         with open('config.ini', 'w') as f:
             self.config.write(f)
     #Opens file path
@@ -449,6 +457,10 @@ class SettingsPage(tk.Frame):
             self.LB4.select()
         Variable = self.config.get('Video', 'Generate_Video')
         if Variable == '0':
+            self.LB2.config(state="disabled")
+            self.LB3.config(state="disabled")
+            self.LB4.config(state="disabled")
+            self.LB5.config(state="disabled")
             self.LB1.select()
         Variable = self.config.get('Data', 'tracking_data')
         if Variable == '0':
@@ -505,10 +517,10 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-            
+
     def reConfigure(self, newBG, newFontColor):
         self.config(bg=newBG, fg=newFontColor)
-      
+
     def set_active(self, state):
         self.active = state
         if (self.active):
