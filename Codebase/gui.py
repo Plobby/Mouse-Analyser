@@ -154,7 +154,8 @@ class DataPage(tk.Frame):
         self.grid(row=0, column=0, sticky="nesw")
         parent.app.theme_manager.register_item("bgr", self)
 
-        graphFigure = plt.figure(facecolor=color_background) # Figure for graphing.
+        graphFigure = plt.figure() # Figure for graphing.
+        #parent.app.theme_manager.register_item("face", graphFigure)
         graphGenerator = graph.dataGraph() # object to store datagraph in.
 
         xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
@@ -167,19 +168,22 @@ class DataPage(tk.Frame):
         graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
         #graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
 
-        titleEntry = tk.Entry(self, bg = color_container, fg = color_text)
+        titleEntry = tk.Entry(self)
+        #parent.app.theme_manager.register_item("bgr", titleEntry)
+        #parent.app.theme_manager.register_item("txt", titleEntry)
         titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
-        setButton = tk.Button(self,bg = color_container, fg = color_text, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry,self.myPlot))
+        setButton = tk.Button(self, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry,self.myPlot))
+        #parent.app.theme_manager.register_item("bgr", setButton)
+        #parent.app.theme_manager.register_item("txt", setButton)
         setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
 
+        #parent.app.theme_manager.register_item("bgr", self.myPlot)
+        #self.myPlot.tick_params(labelcolor=color_text, color=color_container)
+        #for spine in self.myPlot.spines.values():
+            #spine.set_edgecolor(color_container)
 
-        self.myPlot.set_facecolor(color_background)
-        self.myPlot.tick_params(labelcolor=color_text, color=color_container)
-        for spine in self.myPlot.spines.values():
-            spine.set_edgecolor(color_container)
-
-        self.myPlot.set_xlabel("Time (s)", color = color_text)
-        self.myPlot.set_ylabel("Activity per Division", color =  color_text)
+        #self.myPlot.set_xlabel("Time (s)", color = color_text)
+        #self.myPlot.set_ylabel("Activity per Division", color =  color_text)
 
         canvas1 = FigureCanvasTkAgg(graphFigure, self)
         canvas1.draw()
@@ -596,6 +600,7 @@ class RadioButton(tk.Radiobutton):
         theme_manager.register_item("txt", self)
         self.image = image
         self.image1 = image1
+
 # - VIDEO ITEMS
 class VideoQueue(tk.Frame):
     # Variables
@@ -1099,7 +1104,8 @@ class ThemeManager:
         "abgr": [],
         "actr": [],
         "hbgr": [],
-        "sel": []
+        "sel": [],
+        "face": []
     }
     container = None
 
@@ -1157,6 +1163,9 @@ class ThemeManager:
         # Iterate select container items
         for item in self.items["sel"]:
             item.configure(selectcolor=theme._bgcolor)
+        # Iterate face colour container items
+        for item in self.items["face"]:
+            item.configure(facecolor=theme._bgcolor)
 
     def apply_last_theme(self):
         # Get the last theme
