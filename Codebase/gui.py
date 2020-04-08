@@ -155,7 +155,6 @@ class SettingsPage(tk.Frame):
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
 
-
         Yes = ImageTk.PhotoImage(file="../Assets/ButtonYesGr.png")
         No = ImageTk.PhotoImage(file="../Assets/ButtonNoRed.png")
         Open = ImageTk.PhotoImage(file="../Assets/ButtonOpen.png")
@@ -191,67 +190,107 @@ class SettingsPage(tk.Frame):
         parent.app.theme_manager.register_item("bgr", label)
         parent.app.theme_manager.register_item("txt", label)
         popupMenu.grid(row = 2, column =1)
-        #General Settings
-        GeneralLabel = tk.Label(self, text="General Settings", bg=color_background, fg="White", font=("Rockwell",20)).grid(row=0,column=0,sticky="w",pady=10,padx=10)
-        #Change Directory / Open Output Location
-        self.OutputLocationLabel = tk.Label(self,text="Output Directory - " + outputLocation, bg=color_background, fg="White", font=("Rockwell",13))
+        # General Settings
+        GeneralLabel = tk.Label(self, text="General Settings", font=("Rockwell",20))
+        parent.app.theme_manager.register_item("bgr", GeneralLabel)
+        parent.app.theme_manager.register_item("txt", GeneralLabel)
+        GeneralLabel.grid(row=0,column=0,sticky="w",pady=10,padx=10)
+        # Change Directory / Open Output Location
+        self.OutputLocationLabel = tk.Label(self,text="Output Directory - " + outputLocation, font=("Rockwell",13))
+        parent.app.theme_manager.register_item("bgr", self.OutputLocationLabel)
+        parent.app.theme_manager.register_item("txt", self.OutputLocationLabel)
         self.OutputLocationLabel.grid(row=1,column=0,sticky="w",padx=10)
-        OutputButton = tk.Button(self, command=self.SetDirectory, image=Path, compound="left" ,bg=color_background, highlightbackground=color_background, highlightthickness=0, bd=0,activebackground=color_background)
+        # Output button
+        OutputButton = tk.Button(self, command=self.SetDirectory, image=Path, compound="left", highlightthickness=0, bd=0)
+        parent.app.theme_manager.register_item("bgr", OutputButton)
+        parent.app.theme_manager.register_item("hbgr", OutputButton)
+        parent.app.theme_manager.register_item("abgr", OutputButton)
         OutputButton.grid(row=2,column=0,sticky="w",padx=10)
-        OpenButton = tk.Button(self, command=self.OpenPath, image=Open, compound="left" ,bg=color_background, highlightbackground=color_background, highlightthickness=0, bd=0,activebackground=color_background)
-        OpenButton.grid(row=2,column=0,sticky="w",padx=120)
-
-        ThemeLabel= tk.Label(self, text="Client Theme", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=3, column=0, sticky='w',padx=10,pady=10)
+        # Open button
+        OpenButton = tk.Button(self, command=self.OpenPath, image=Open, compound="left", highlightthickness=0, bd=0)
+        parent.app.theme_manager.register_item("bgr", OpenButton)
+        parent.app.theme_manager.register_item("hbgr", OpenButton)
+        parent.app.theme_manager.register_item("abgr", OpenButton)
+        OpenButton.grid(row=2,column=0,sticky="w", padx=120)
+        # Theme label
+        ThemeLabel= tk.Label(self, text="Client Theme", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", ThemeLabel)
+        parent.app.theme_manager.register_item("txt", ThemeLabel)
+        ThemeLabel.grid(row=3, column=0, sticky='w',padx=10,pady=10)
         self.ti = tk.IntVar()
-        self.TB1 = RadioButton(self,"Light",NoSelect,Select,self.ThemeSave,self.ti,1)
+        self.TB1 = RadioButton(self,parent.app.theme_manager,"Light",NoSelect,Select,self.ThemeSave,self.ti,1)
         self.TB1.grid(row=4, column=0, sticky='w',padx=10)
-        self.TB3 = RadioButton(self,"Dark",NoSelect,Select,self.ThemeSave,self.ti,2)
+        self.TB3 = RadioButton(self,parent.app.theme_manager,"Dark",NoSelect,Select,self.ThemeSave,self.ti,2)
         self.TB3.grid(row=4, column=0, sticky='w', padx=110)
-        self.TB4 = RadioButton(self,"Debug",NoSelect,Select,self.ThemeSave,self.ti,3)
+        self.TB4 = RadioButton(self,parent.app.theme_manager,"Debug",NoSelect,Select,self.ThemeSave,self.ti,3)
         self.TB4.grid(row=4, column=0, sticky='w', padx=210)
-        #Video Settings
-        VideoLabel = tk.Label(self, text="Video Settings", bg=color_background, fg="White", font=("Rockwell",20)).grid(row=5,column=0,sticky="w",pady=10,padx=10)
-        #SaveVideo - Yes/No
-        SaveLabel= tk.Label(self, text="Generate Video File", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=6, column=0, sticky='w',padx=10,pady=10)
+        # Video Settings
+        VideoLabel = tk.Label(self, text="Video Settings", font=("Rockwell",20))
+        parent.app.theme_manager.register_item("bgr", VideoLabel)
+        parent.app.theme_manager.register_item("txt", VideoLabel)
+        VideoLabel.grid(row=5,column=0,sticky="w",pady=10,padx=10)
+        # SaveVideo - Yes/No
+        SaveLabel= tk.Label(self, text="Generate Video File", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", SaveLabel)
+        parent.app.theme_manager.register_item("txt", SaveLabel)
+        SaveLabel.grid(row=6, column=0, sticky='w',padx=10,pady=10)
         self.SVB = tk.IntVar()
-        self.LB1 = CheckButton(self,Yes,No,self.GenerateVideo, self.SVB)
+        self.LB1 = CheckButton(self, parent.app.theme_manager,Yes,No,self.GenerateVideo, self.SVB)
         self.LB1.grid(row=7,column=0,sticky="w",padx=10)
-        #Video Type RadioButton
-        VideoTypeLabel = tk.Label(self, text="Video Type", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=8, column=0,sticky='w', padx=10,pady=10)
+        # Video Type RadioButton
+        VideoTypeLabel = tk.Label(self, text="Video Type", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", VideoTypeLabel)
+        parent.app.theme_manager.register_item("txt", VideoTypeLabel)
+        VideoTypeLabel.grid(row=8, column=0,sticky='w', padx=10,pady=10)
         self.v = tk.IntVar()
-        self.LB2 = RadioButton(self,"Raw",NoSelect,Select,self.VideoType,self.v,1)
+        self.LB2 = RadioButton(self,parent.app.theme_manager,"Raw",NoSelect,Select,self.VideoType,self.v,1)
         self.LB2.grid(row=9, column=0, sticky='w',padx=10)
-        self.LB3 = RadioButton(self,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
+        self.LB3 = RadioButton(self,parent.app.theme_manager,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
         self.LB3.grid(row=9, column=0, sticky='w', padx=110)
-        self.LB4 = RadioButton(self,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
+        self.LB4 = RadioButton(self,parent.app.theme_manager,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
         self.LB4.grid(row=9, column=0, sticky='w', padx=210)
-        #Bounding Box - Yes/No
-        BoundingBoxLabel = tk.Label(self, text="Bounding Box", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=10,column=0,sticky='w',padx=10,pady=10)
+        # Bounding Box - Yes/No
+        BoundingBoxLabel1 = tk.Label(self, text="Bounding Box", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", BoundingBoxLabel1)
+        parent.app.theme_manager.register_item("txt", BoundingBoxLabel1)
+        BoundingBoxLabel1.grid(row=10,column=0,sticky='w',padx=10,pady=10)
         self.BBI = tk.IntVar()
-        self.LB5 = CheckButton(self, Yes,No,self.BoundingBox,self.BBI)
+        self.LB5 = CheckButton(self, parent.app.theme_manager, Yes,No,self.BoundingBox,self.BBI)
         self.LB5.grid(row=11, column=0, sticky="w", padx=10)
-        BoundingBoxLabel = tk.Label(self, text="Playback Buffer Size", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=12,column=0,sticky='w',padx=10,pady=10)
-        #Playback Buzzer Size RadioButton
+        BoundingBoxLabel2 = tk.Label(self, text="Playback Buffer Size", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", BoundingBoxLabel2)
+        parent.app.theme_manager.register_item("txt", BoundingBoxLabel2)
+        BoundingBoxLabel2.grid(row=12,column=0,sticky='w',padx=10,pady=10)
+        # Playback Buzzer Size RadioButton
         self.BS = tk.IntVar()
-        self.LB6 = RadioButton(self,"16",NoSelect,Select,self.BufferSize,self.BS,1)
+        self.LB6 = RadioButton(self,parent.app.theme_manager,"16",NoSelect,Select,self.BufferSize,self.BS,1)
         self.LB6.grid(row=13, column=0,sticky="w",padx=10)
-        self.LB7 = RadioButton(self,"32",NoSelect,Select,self.BufferSize,self.BS,2)
+        self.LB7 = RadioButton(self,parent.app.theme_manager,"32",NoSelect,Select,self.BufferSize,self.BS,2)
         self.LB7.grid(row=13, column=0,sticky="w",padx=110)
-        self.LB8 = RadioButton(self,"64",NoSelect,Select,self.BufferSize,self.BS,3)
+        self.LB8 = RadioButton(self,parent.app.theme_manager,"64",NoSelect,Select,self.BufferSize,self.BS,3)
         self.LB8.grid(row=13, column=0,sticky="w",padx=210)
-        self.LB9 = RadioButton(self,"128",NoSelect,Select,self.BufferSize,self.BS,4)
+        self.LB9 = RadioButton(self,parent.app.theme_manager,"128",NoSelect,Select,self.BufferSize,self.BS,4)
         self.LB9.grid(row=13, column=0,sticky="w",padx=310)
         #Data Settings
-        Data = tk.Label(self, text="Data Settings", bg=color_background, fg="White", font=("Rockwell",20), pady=20).grid(row=0,column=1,sticky="w")
+        Data = tk.Label(self, text="Data Settings", font=("Rockwell",20), pady=20)
+        parent.app.theme_manager.register_item("bgr", Data)
+        parent.app.theme_manager.register_item("txt", Data)
+        Data.grid(row=0,column=1,sticky="w")
         #Mouse Tracking Setting - Yes/No
-        MouseTrackingLabel = tk.Label(self, text="Mouse Position", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=1,column=1, sticky="w", pady=10)
+        MouseTrackingLabel = tk.Label(self, text="Mouse Position", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", MouseTrackingLabel)
+        parent.app.theme_manager.register_item("txt", MouseTrackingLabel)
+        MouseTrackingLabel.grid(row=1,column=1, sticky="w", pady=10)
         self.MTI = tk.IntVar()
-        self.RB1 = CheckButton(self, Yes,No, self.MouseTracking,self.MTI)
+        self.RB1 = CheckButton(self, parent.app.theme_manager, Yes,No, self.MouseTracking,self.MTI)
         self.RB1.grid(row=2,column=1, sticky="w")
         #Pose Estimations /Mouse Behaviour
-        MouseBehaviourLabel = tk.Label(self, text="Mouse Behaviour", bg=color_background, fg="White", font=("Rockwell",16)).grid(row=3,column=1, sticky="w",pady=10)
+        MouseBehaviourLabel = tk.Label(self, text="Mouse Behaviour", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", MouseBehaviourLabel)
+        parent.app.theme_manager.register_item("txt", MouseBehaviourLabel)
+        MouseBehaviourLabel.grid(row=3,column=1, sticky="w",pady=10)
         self.MBI = tk.IntVar()
-        self.RB2 = CheckButton(self, Yes,No, self.MouseBehaviour,self.MBI)
+        self.RB2 = CheckButton(self, parent.app.theme_manager, Yes,No, self.MouseBehaviour,self.MBI)
         self.RB2.grid(row=4,column=1, sticky="w")
 
         self.togglebuttons()
@@ -469,13 +508,23 @@ class IconButton(tk.Button):
         self.image = image
 
 class CheckButton(tk.Checkbutton):
-    def __init__(self,parent,image,image1,func,var):
-        tk.Checkbutton.__init__(self,parent,image=image,variable=var,selectimage=image1, compound="left", command=func, bd=0, bg=color_background,selectcolor=color_background, activebackground=color_background,highlightbackground=color_background, highlightthickness=0, indicatoron=0)
+    def __init__(self,parent,theme_manager,image,image1,func,var):
+        tk.Checkbutton.__init__(self,parent,image=image,variable=var,selectimage=image1, compound="left", command=func, bd=0, highlightthickness=0, indicatoron=0)
+        theme_manager.register_item("bgr", self)
+        theme_manager.register_item("abgr", self)
+        theme_manager.register_item("hbgr", self)
+        theme_manager.register_item("sel", self)
         self.image = image
         self.image1 = image1
+
 class RadioButton(tk.Radiobutton):
-    def __init__(self,parent,text,image,image1,func,var,value):
-        tk.Radiobutton.__init__(self,parent,text=text,image=image,selectimage=image1,compound="center", variable=var,command=func,value=value, bd=0, bg=color_background,selectcolor=color_background, activebackground=color_background,highlightbackground=color_background, fg="white", font=("Rockwell", 14), pady=0, highlightthickness=0,indicatoron=0)
+    def __init__(self,parent,theme_manager,text,image,image1,func,var,value):
+        tk.Radiobutton.__init__(self,parent, text=text, image=image, selectimage=image1, compound="center", variable=var, command=func, value=value, bd=0, font=("Rockwell", 14), pady=0, highlightthickness=0, indicatoron=0)
+        theme_manager.register_item("bgr", self)
+        theme_manager.register_item("abgr", self)
+        theme_manager.register_item("hbgr", self)
+        theme_manager.register_item("sel", self)
+        theme_manager.register_item("txt", self)
         self.image = image
         self.image1 = image1
 # - VIDEO ITEMS
@@ -980,7 +1029,8 @@ class ThemeManager:
         "txt": [],
         "abgr": [],
         "actr": [],
-        "hbgr": []
+        "hbgr": [],
+        "sel": []
     }
     container = None
 
@@ -1035,6 +1085,9 @@ class ThemeManager:
         # Iterate highlight container items
         for item in self.items["hbgr"]:
             item.configure(highlightbackground=theme._cntrcolor)
+        # Iterate select container items
+        for item in self.items["sel"]:
+            item.configure(selectcolor=theme._bgcolor)
 
     def apply_last_theme(self):
         # Get the last theme
