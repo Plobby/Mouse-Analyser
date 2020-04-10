@@ -228,26 +228,14 @@ class SettingsPage(tk.Frame):
         settings_frame = tk.Frame(self)
         settings_frame.grid(row=0,column=1,sticky="nesw")
         parent.app.theme_manager.register_item("bgr", settings_frame)
-        self.change_theme_button = tk.Button(settings_frame, text="Theme: Dark", command=self.rotate_theme)
-        self.change_theme_button.config(font=("Century Schoolbook Bold Italic", 18), padx=8, highlightthickness=0)
-        self.change_theme_button.grid(row=0,column=0,pady=4)
-        parent.app.theme_manager.register_item("ctr", self.change_theme_button)
-        parent.app.theme_manager.register_item("txt", self.change_theme_button)
+
 
         self.tkvar = tk.StringVar(load)
 
-        # Dictionary with options
-        choices = { 'Dark','Light','Debug'}
-        self.tkvar.set('Dark') # set the default option
-        # link function to change dropdown
-        self.tkvar.trace('w', self.change_dropdown)
 
-        popupMenu = tk.OptionMenu(self, self.tkvar, *choices)
-        label = tk.Label(self, text="Choose a theme!")
-        label.grid(row = 1, column = 1)
-        parent.app.theme_manager.register_item("bgr", label)
-        parent.app.theme_manager.register_item("txt", label)
-        popupMenu.grid(row = 2, column =1)
+
+
+
         # General Settings
         GeneralLabel = tk.Label(self, text="General Settings", font=("Rockwell",20))
         parent.app.theme_manager.register_item("bgr", GeneralLabel)
@@ -277,7 +265,7 @@ class SettingsPage(tk.Frame):
         ThemeLabel.grid(row=3, column=0, sticky='w',padx=10,pady=10)
         self.ti = tk.IntVar()
         self.TB1 = RadioButton(self,parent.app.theme_manager,"Light",NoSelect,Select,self.ThemeSave,self.ti,1)
-        self.TB1.grid(row=4, column=0, sticky='w',padx=10)
+        self.TB1.grid(row =4, column=0, sticky='w',padx=10)
         self.TB3 = RadioButton(self,parent.app.theme_manager,"Dark",NoSelect,Select,self.ThemeSave,self.ti,2)
         self.TB3.grid(row=4, column=0, sticky='w', padx=110)
         self.TB4 = RadioButton(self,parent.app.theme_manager,"Debug",NoSelect,Select,self.ThemeSave,self.ti,3)
@@ -352,14 +340,6 @@ class SettingsPage(tk.Frame):
         self.RB2.grid(row=4,column=1, sticky="w")
 
         self.togglebuttons()
-    
-    def rotate_theme(self):
-        name = self.app.theme_manager.rotate_theme()
-        self.change_theme_button.config(text="Theme: " + name)
-
-    # on change dropdown value
-    def change_dropdown(self, *args):
-        print(self.tkvar.get())
 
     # Set Saved Video Directory and Display Label
     def SetDirectory(self):
@@ -532,7 +512,7 @@ class SettingsPage(tk.Frame):
             self.LB8.select()
         if Variable == "128":
             self.LB9.select()
-            
+
 # - BUTTON ITEMS
 class MenuButton(tk.Button):
     active = False
@@ -941,7 +921,7 @@ class VideoTrackbar(tk.Canvas):
         # TODO: Fill based on theme
         # Redraw the progress
         self.redraw()
-    
+
     # Function to draw the pointer at the specified location
     def _draw_pointer(self, x):
         # Draw filled portion of bar
