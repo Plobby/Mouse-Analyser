@@ -102,7 +102,7 @@ def processVideo(videoSource, doSaveVid):
         
         #Find width of mouse
         mouseWidth = box[3] - box[2]
-        #Find height of mouse
+        #Find height of mouseCCL
         mouseHeight = box[1] - box[0]
         #Find centre of mass of mouse
         mouseCOM = (box[2] + (mouseWidth / 2), box[0] + (mouseHeight / 2))
@@ -128,7 +128,7 @@ def processFrame(frame, threshold):
      #Create segmented version of frame
     segmented = seg.thresholdSegment(frame, threshold)
     #Find all objects in segmented frame using CCL
-    objects = CCL.CCL(segmented)
+    objects = ccl.CCL(segmented)
     
     #Create array to hold sorted objects keys
     sortedKeys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)

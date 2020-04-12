@@ -48,7 +48,10 @@ class App(tk.Tk):
         self.grid_columnconfigure(0, weight=1)
         # Configure appearance
         self.title("MouseHUB")
-        self.iconbitmap("../Assets/IconLarge.ico")
+        if os.name == "nt":
+            self.iconbitmap("../Assets/IconLarge.ico")
+        else:
+            self.iconbitmap("@../Assets/IconLarge.xbm")
         self.geometry("1280x720")
         self.minsize(780, 520)
         # Create frame view
