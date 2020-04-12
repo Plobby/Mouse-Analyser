@@ -158,11 +158,27 @@ class DataPage(tk.Frame):
         yValues = [50,30,120,25]
         mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
+        bigNum = 300
+        newList = []
+
+        for num in range(0,bigNum):
+            if num <= bigNum/5:
+                newList.append(0)
+            elif num >= (bigNum/5)*4:
+                newList.append(0)
+            elif num > bigNum/5 and num < bigNum/7*2:
+                newList.append(2)
+            else:
+                newList.append(3)
+        print(newList)
+        print(len(newList))
+
         xLabels2 = [5,6,7,8,5,6]
         yValues2 = [4,5,6,7,8,3]
 
-        graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
-        #graphFigure, myPlot = graphGenerator.createStackedBarChart(graphFigure,1,5,xLabels,mouseReport)
+        #graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
+        #graphFigure, self.myPlot = graphGenerator.createStackedBarChart(graphFigure,1,30,xLabels,newList)
+        graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, [[100,120,140,150,160,140,200],[100,120,130,140,150,160,210]],640,480)
 
         titleEntry = tk.Entry(self, bg = color_container, fg = color_text)
         titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)

@@ -62,7 +62,7 @@ class dataGraph():
                 tempList = [] # Empty the temporary list once it's finished :)
 
             #print("INDEX")
-            print(indexDict)
+            #print(indexDict)
             barValues = []
             tempList = []
 
@@ -93,8 +93,8 @@ class dataGraph():
                 xValues.append(xValue)
                 xValue += round(timePeriodPerBar/timeGapPerReportedPosition) # The values for the bars are the same as the difference from before.
 
-            print(barValues)
-            print(xValues)
+            #print(barValues)
+            #print(xValues)
             useList = []
             highestValues = barValues[0]
             rotator = 0
@@ -131,8 +131,55 @@ class dataGraph():
 
         return f, innerPlot
 
+    # Bottom left is 0,0 for the pose estimation
+
+    def createPositionChart(self,f,coordsXY,vidSizeX,vidSizeY):
+        innerPlot = f.add_subplot(1,1,1)
+
+        plt.plot(coordsXY[0], coordsXY[1])
+
+        axes = plt.gca()
+        axes.set_xlim([0,vidSizeX]) # Create fixed size axis for my
+        axes.set_ylim([0,vidSizeY])
+
+        return f, innerPlot
+
+    def estimatePosesDefault(self,xSizes,ySizes,coordsXY,vidSizeX,vidSizeY):
+
+        positionList = [] # Used to contain the positions eventually.
+        positionMeaning = {"Undefined":0,"Eating":1,"Moving":2,"Hanging":3,"Sleeping":4} # Used to store the relevant meaning of each integer in the final list.
+
+        sizeRotate = 0 # Variable to keep track of the current frame.
+        currentPosCount = 0 # Variable to define how long the mouse has been in it's current position.
+        timeToSleep = 1200
+        # Relevant because it takes 1200 frames (40 seconds) for a mouse to be classsed as asleep
+
+        while sizeRotate < xSizes.len(): # While the current frame is less than the frames in the x list... (Loop through the frames once)
+
+            if xSizes[sizeRotate]*2 < (ySizes[sizeRotate]: # If the mouse is more than twice as long as tall...
+                positionList.append(1)
+            elif abs(coordsXY[0][sizeRotate-20] - coords[0][sizeRotate]) >= 20 and abs(coordsXY[1][sizeRotate-20] - coords[1][20]) >= 20:
+                # If the centre of the mouse is moving more than 20 pixels every 20 frames (1px/frame), then it is moving.
+                positionList.append(2)
+            elif coordsXY[1][sizeRotate] > vidSizeY/2:
+                # If the mouse's centre of mass is higher than half the video width then the little lad must be hanging from the roof!!!
+                positionList.append(3)
+            elif sizeRotate > timeToSleep: # If we're more than the time needed to sleep...
+                if xSizes[sizeRotate] >= (ySizes[sizeRotate]*1.5) and abs(coordsXY[0][sizeRotate-timeToSleep] - coords[0][sizeRotate]) < 30 and  abs(coordsXY[1][sizeRotate-timeToSleep] - coords[1][sizeRotate]) < 30: # If the mouse is more than 1.5x as tall as long...
+                    # If the difference between the central position of the mouse 20 frames ago and the central position of the mouse currently is less than 30 pixels in the x and y directions, then it hasn't moved very far and must be asleep.
+                    # The mouse has to stay reasonably still for 1200 frames (within 30 px on x and y axis) to be classed as still in this system.
+                    # Then it will be classed as asleep.
+                    positionList.append(4)
+                else:
+                    positionList.append(0) # Undefined behaviour.
+
+            else: # if we don't know what else to do...
+                positionList.append(0) #            ...it must be undefined.
+
+            sizeRotate+=1
 
 
+        return positionMeaning, positionList
 
 
 
