@@ -41,7 +41,7 @@ def CCL(inpFrame):
     return objects
 
 """Function to iterate over image until an un-labelled foreground pixel is found"""
-def findNewObject(inpFrame, labelled):
+def findNewObjectOld(inpFrame, labelled):
     xRange = range(inpFrame.shape[0])
     yRange = range(inpFrame.shape[1])
 
@@ -51,6 +51,26 @@ def findNewObject(inpFrame, labelled):
             #Check if pixel is white (255) and not already labelled
             if inpFrame[x, y] == 255 and (x, y) not in labelled:
                 return (x, y)
+
+    #If no new pixels are found, return None
+    return None
+
+def findNewObject(inpFrame, labelled):
+    #Flatten inpFrame in to 1D array
+    pixels = inpFrame.flatten()
+    #Get width of row in image in pixels
+    rowWidth = inpFrame.shape[0]
+
+    #Iterate through pixels, check if a pixel is foreground. If it is, calculate coordinate pair and make sure it is not in labelled, then return pair
+    for i, value in enumerate(pixels):
+        if value == 255:
+            xIndex = i // rowWidth  
+            yIndex = i % rowWidth
+
+            coord = (xIndex, yIndex)
+
+            if coord not in labelled:
+                return coord
 
     #If no new pixels are found, return None
     return None
@@ -73,19 +93,19 @@ def exploreObject(inpFrame, startPixel):
             #Add pixel to newObjectCoords
             newObjectCoords.append(pixel)
 
-            #Check if pixel above is not already searched and is foreground
+            #Check if pixel above is foreground
             if inpFrame[pixel[0] - 1, pixel[1]] == 255:
                 queue.append((pixel[0] - 1, pixel[1]))
 
-            #Check if pixel right is not already searched and is foreground
+            #Check if pixel right is foreground
             if inpFrame[pixel[0], pixel[1] + 1] == 255:
                 queue.append((pixel[0], pixel[1] + 1))
 
-            #Check if pixel below is not already searched and is foreground
+            #Check if pixel below is foreground
             if inpFrame[pixel[0] + 1, pixel[1]] == 255:
                 queue.append((pixel[0] + 1, pixel[1]))
 
-            #Check if pixel left is not already searched and is foreground
+            #Check if pixel left is foreground
             if inpFrame[pixel[0], pixel[1] - 1] == 255:
                 queue.append((pixel[0], pixel[1] - 1))
 
