@@ -1,9 +1,8 @@
 import cv2
 import threading
 
-import iomanager
 import segmentation as seg
-import ccl
+import ccl as CCL
 import time
 
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
@@ -31,9 +30,10 @@ def processVideo(videoSource, doSaveVid):
         startTime = time.time()
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
+        frameMax = video.get(cv2.CAP_PROP_FRAME_COUNT)
         #Set default bounding box in case no bounding box is ever found
         frameBoundingBoxes[framePos] = [0, 0, 0, 0]
-
+        print(str(time.time() - startTime))
         #Calculate bounding box size for mouse in frame
         boundingBox = processFrame(frame, videoThreshold)
 
@@ -47,10 +47,11 @@ def processVideo(videoSource, doSaveVid):
             #Add current frame's bounding box to frameBoundingBoxes
             frameBoundingBoxes[framePos] = boundingBox
 
+        print(str(time.time() - startTime))
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
-        print(str(framePos) + ": " + str(time.time() - startTime))
+        print(str(framePos) + "/" + str(frameMax) + ": " + str(time.time() - startTime))
         #Break while loop if return flag is false
         if not ret:
             break

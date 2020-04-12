@@ -135,7 +135,6 @@ class VideoPage(tk.Frame):
         self.video_queue.add_videos(videos)
         if (len(videos) > 0):
             self.video_player.set_source(videos[0])
-            self.video_player.play()
 
     # Function to clear the user selected videos
     def clear_videos(self):
@@ -144,8 +143,12 @@ class VideoPage(tk.Frame):
     # Function to process the user selected videos
     def process_videos(self):
         videos = self.video_queue.get_videos()
-        videoproc.processVideo(videos[0], doSaveVid=True)
-        # TODO: Process videos here
+        print(videos)
+        filecheck = videos[0].file
+        #videos[0].start()
+        #videos[0].close()
+        #time.sleep(10)
+        videoproc.processVideo(filecheck, doSaveVid=True)
 
 class DataPage(tk.Frame):
     def __init__(self, parent):
@@ -242,14 +245,7 @@ class SettingsPage(tk.Frame):
         settings_frame = tk.Frame(self)
         settings_frame.grid(row=0,column=1,sticky="nesw")
         parent.app.theme_manager.register_item("bgr", settings_frame)
-
-
         self.tkvar = tk.StringVar(load)
-
-
-
-
-
         # General Settings
         GeneralLabel = tk.Label(self, text="General Settings", font=("Rockwell",20))
         parent.app.theme_manager.register_item("bgr", GeneralLabel)

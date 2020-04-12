@@ -42,6 +42,7 @@ def otsuThreshold(inpFrame):
         for i in range(threshold, 256):
             sumValues += hist[i] * i
 
+        #print(pixelsForeground + " total foreground pixels!")
         meanForeground = sumValues / pixelsForeground
 
         #Calculate Between Class Variance for the frame
