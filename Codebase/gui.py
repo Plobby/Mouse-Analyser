@@ -217,8 +217,6 @@ class DataPage(tk.Frame):
         print(title)
         myPlot.set_title(title, color = color_text)
 
-
-
 class SettingsPage(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)

@@ -156,7 +156,7 @@ class dataGraph():
 
         while sizeRotate < xSizes.len(): # While the current frame is less than the frames in the x list... (Loop through the frames once)
 
-            if xSizes[sizeRotate]*2 < (ySizes[sizeRotate]: # If the mouse is more than twice as long as tall...
+            if xSizes[sizeRotate]*2 < ySizes[sizeRotate]: # If the mouse is more than twice as long as tall...
                 positionList.append(1)
             elif abs(coordsXY[0][sizeRotate-20] - coords[0][sizeRotate]) >= 20 and abs(coordsXY[1][sizeRotate-20] - coords[1][20]) >= 20:
                 # If the centre of the mouse is moving more than 20 pixels every 20 frames (1px/frame), then it is moving.
