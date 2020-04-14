@@ -50,7 +50,7 @@ def processVideo(videoSource, doSaveVid):
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
-        print(str(framePos) + ": " + str(time.time() - startTime))
+        print("frame " + str(int(framePos)) + ": " + str(time.time() - startTime)[:4] + "s")
         #Break while loop if return flag is false
         if not ret:
             break
@@ -152,6 +152,5 @@ def processFrame(frame, threshold):
         if coord[1] > MaxY:
             MaxY = coord[1]
 
-    print("did find bound box")
     #Return bounding box information
     return MinX, MaxX, MinY, MaxY

@@ -18,17 +18,21 @@ def CCL(inpFrame):
     #List to contain coordinates of all explored objects
     labelled = []
 
+    pixelSearchOffset = 0
+
     #Continually look for and explore new objects in the frame
     while True:
         #Find an unexplored pixel (this indicates a new object in the frame)
-        searchPixel = findNewObject(inpFrame, labelled)
+        searchPixel = findNewObject(inpFrame, labelled, pixelSearchOffset)
 
         #Break while loop if no new pixel is found
-        if searchPixel == None: 
+        if searchPixel[0] == None: 
             break
+        
+        pixelSearchOffset = searchPixel[1]
 
         #Explore all pixels connected to searchPixel to find new object
-        newObject = exploreObject(inpFrame, searchPixel)
+        newObject = exploreObject(inpFrame, searchPixel[0])
         #Add newObject to objects dictionary
         objects[objectLabel] = newObject
         #Update labelled array
@@ -55,25 +59,23 @@ def findNewObjectOld(inpFrame, labelled):
     #If no new pixels are found, return None
     return None
 
-def findNewObject(inpFrame, labelled):
+def findNewObject(inpFrame, labelled, startOffset):
     #Flatten inpFrame in to 1D array
-    pixels = inpFrame.flatten()
-    #Get width of row in image in pixels
-    rowWidth = inpFrame.shape[0]
+    pixels = inpFrame.flatten()[startOffset:]
+    #Get width of inpFrame in pixels
+    rowWidth = inpFrame.shape[1]
 
     #Iterate through pixels, check if a pixel is foreground. If it is, calculate coordinate pair and make sure it is not in labelled, then return pair
     for i, value in enumerate(pixels):
         if value == 255:
-            xIndex = i // rowWidth  
-            yIndex = i % rowWidth
+            xIndex = (i + startOffset) // rowWidth
+            yIndex = (i + startOffset) % rowWidth
 
-            coord = (xIndex, yIndex)
-
-            if coord not in labelled:
-                return coord
+            if (xIndex, yIndex) not in labelled:
+                return (xIndex, yIndex), (i + startOffset)
 
     #If no new pixels are found, return None
-    return None
+    return None, 0
 
 """Function that carries out a breadth first search starting from startPixel and keeping track of all pixels that are currently unlabelled.
    Returns a list of coordinates of all currently unexplored pixels in an object."""
@@ -94,19 +96,19 @@ def exploreObject(inpFrame, startPixel):
             newObjectCoords.append(pixel)
 
             #Check if pixel above is foreground
-            if inpFrame[pixel[0] - 1, pixel[1]] == 255:
+            if inpFrame[pixel[0] - 1, pixel[1]] == 255 and pixel[0] > 0:
                 queue.append((pixel[0] - 1, pixel[1]))
 
             #Check if pixel right is foreground
-            if inpFrame[pixel[0], pixel[1] + 1] == 255:
+            if inpFrame[pixel[0], pixel[1] + 1] == 255 and pixel[1] < inpFrame.shape[1] - 1: 
                 queue.append((pixel[0], pixel[1] + 1))
 
             #Check if pixel below is foreground
-            if inpFrame[pixel[0] + 1, pixel[1]] == 255:
+            if inpFrame[pixel[0] + 1, pixel[1]] == 255 and pixel[0] < inpFrame.shape[0] - 1:
                 queue.append((pixel[0] + 1, pixel[1]))
 
             #Check if pixel left is foreground
-            if inpFrame[pixel[0], pixel[1] - 1] == 255:
+            if inpFrame[pixel[0], pixel[1] - 1] == 255 and pixel[1] > 0:
                 queue.append((pixel[0], pixel[1] - 1))
 
     return newObjectCoords
