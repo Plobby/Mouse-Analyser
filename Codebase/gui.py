@@ -204,6 +204,8 @@ class DataPage(tk.Frame):
         #for spine in self.myPlot.spines.values():
             #spine.set_edgecolor(color_container)
 
+        parent.app.theme_manager.add_callback(lambda: update_graph(theme_manager.getCurrentTheme))
+
         #self.myPlot.set_xlabel("Time (s)", color = color_text)
         #self.myPlot.set_ylabel("Activity per Division", color =  color_text)
 
@@ -211,6 +213,11 @@ class DataPage(tk.Frame):
         canvas1.draw()
         canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
 
+
+        def update_graph(theme):
+            # Update stuff here
+            for spine in self.myPlot.spines.values():
+                spine.set_edgecolor()
 
     def showBarChart(self,graphFigure,graphGenerator,canvas1):
         # Code to implement graph on canvas + page
@@ -1070,7 +1077,9 @@ class ThemeManager:
         # Iterate face colour container items
         for item in self.items["face"]:
             item.configure(facecolor=theme._bgcolor)
-
+        for func in callbacks:
+            func(theme)
+            
     def apply_theme_name(self, theme_name):
         # Get the theme from name
         new_theme = next((t for t in self.themes if t._name == theme_name), None)
@@ -1082,6 +1091,22 @@ class ThemeManager:
         theme = self.get_last_theme()
         # Apply the last theme
         self.apply_theme_name(theme)
+
+    def getCurrentTheme(self):
+        return self.themes[current_theme_index]
+
+    def getBackground(self):
+        return self.themes[current_theme_index].background()
+
+    def getHover(self):
+        return self.themes[current_theme_index].hover()
+
+    def getContainer(self):
+        return self.themes[current_theme_index].container()
+
+    def getText(self):
+        return self.themes[current_theme_index].text()
+
 
     # Get the last used theme
     def get_last_theme(self):
