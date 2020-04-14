@@ -56,15 +56,10 @@ def processVideo(videoSource, doSaveVid, outputLocation):
     #Initialise variables and VideoWriter object needed to save videos if doSaveVid flag is true
     if doSaveVid:
         #Split videoSource string to find parent folder (source) and file name
-        try:
-            split = videoSource.split('/')
-            fileName = split[-1].split('.')[0]
-        except:
-            try:
-                split = videoSource.split('\\')
-                fileName = split[-1].split('.')[0]
-            except:
-                fileName = 'untitled'
+        split = videoSource.split('/')
+        split = videoSource.split('\\')
+        fileName = split[-1].split('.')[0]
+        
 
         #Create cv2 VideoWriter object to output bounded video
         out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
