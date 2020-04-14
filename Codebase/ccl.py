@@ -17,7 +17,6 @@ def CCL(inpFrame):
 
     #List to contain coordinates of all explored objects
     labelled = []
-
     pixelSearchOffset = 0
 
     #Continually look for and explore new objects in the frame
@@ -27,8 +26,7 @@ def CCL(inpFrame):
 
         #Break while loop if no new pixel is found
         if searchPixel[0] == None: 
-            break
-        
+            break   
         pixelSearchOffset = searchPixel[1]
 
         #Explore all pixels connected to searchPixel to find new object
