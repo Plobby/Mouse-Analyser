@@ -53,7 +53,10 @@ class App(tk.Tk):
         self.grid_columnconfigure(0, weight=1)
         # Configure appearance
         self.title("MouseHUB")
-        self.iconbitmap("../Assets/IconLarge.ico")
+        if os.name == "nt":
+            self.iconbitmap("../Assets/IconLarge.ico")
+        else:
+            self.iconbitmap("@../Assets/IconLarge.xbm")
         self.geometry("1280x720")
         self.minsize(780, 520)
         # Create frame view
@@ -135,7 +138,6 @@ class VideoPage(tk.Frame):
         self.video_queue.add_videos(videos)
         if (len(videos) > 0):
             self.video_player.set_source(videos[0])
-            self.video_player.play()
 
     # Function to clear the user selected videos
     def clear_videos(self):
@@ -144,8 +146,14 @@ class VideoPage(tk.Frame):
     # Function to process the user selected videos
     def process_videos(self):
         videos = self.video_queue.get_videos()
-        videoproc.processVideo(videos[0], doSaveVid=True)
-        # TODO: Process videos here
+        filecheck = videos[0].file
+
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        outputLocation = self.config.get("General", "outputPath")
+        generateBoundedVideo =  True if self.config.get("Video", "generate_video") == "1" else False
+        
+        videoproc.processVideo(filecheck, doSaveVid=generateBoundedVideo, outputLocation=outputLocation)
 
 class DataPage(tk.Frame):
     def __init__(self, parent):
@@ -174,8 +182,6 @@ class DataPage(tk.Frame):
                 newList.append(2)
             else:
                 newList.append(3)
-        print(newList)
-        print(len(newList))
 
         xLabels2 = [5,6,7,8,5,6]
         yValues2 = [4,5,6,7,8,3]
@@ -221,11 +227,28 @@ class DataPage(tk.Frame):
 
     def getAndSetTitle(self, titleEntry, myPlot):
         title = titleEntry.get()
-        print(title)
-        myPlot.set_title(title, color = color_text)
+        #myPlot.set_title(title, color = color_text)
 
 class SettingsPage(tk.Frame):
+    lookup_boolean = {
+        0: "1",
+        1: "0"
+    }
+    lookup_theme = {
+        1: "Light",
+        2: "Dark",
+        3: "Debug"
+    }
+    lookup_buffer = {
+        1: "16",
+        2: "32",
+        3: "64",
+        4: "128"
+    }
+
     def __init__(self, parent):
+        self.theme_manager = parent.app.theme_manager
+
         tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
         parent.app.theme_manager.register_item("bgr", self)
@@ -249,14 +272,7 @@ class SettingsPage(tk.Frame):
         settings_frame = tk.Frame(self)
         settings_frame.grid(row=0,column=1,sticky="nesw")
         parent.app.theme_manager.register_item("bgr", settings_frame)
-
-
         self.tkvar = tk.StringVar(load)
-
-
-
-
-
         # General Settings
         GeneralLabel = tk.Label(self, text="General Settings", font=("Rockwell",20))
         parent.app.theme_manager.register_item("bgr", GeneralLabel)
@@ -297,33 +313,13 @@ class SettingsPage(tk.Frame):
         parent.app.theme_manager.register_item("txt", VideoLabel)
         VideoLabel.grid(row=5,column=0,sticky="w",pady=10,padx=10)
         # SaveVideo - Yes/No
-        SaveLabel= tk.Label(self, text="Generate Video File", font=("Rockwell",16))
+        SaveLabel= tk.Label(self, text="Generate Bounding Box Video File", font=("Rockwell",16))
         parent.app.theme_manager.register_item("bgr", SaveLabel)
         parent.app.theme_manager.register_item("txt", SaveLabel)
         SaveLabel.grid(row=6, column=0, sticky='w',padx=10,pady=10)
         self.SVB = tk.IntVar()
         self.LB1 = CheckButton(self, parent.app.theme_manager,Yes,No,self.GenerateVideo, self.SVB)
         self.LB1.grid(row=7,column=0,sticky="w",padx=10)
-        # Video Type RadioButton
-        VideoTypeLabel = tk.Label(self, text="Video Type", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", VideoTypeLabel)
-        parent.app.theme_manager.register_item("txt", VideoTypeLabel)
-        VideoTypeLabel.grid(row=8, column=0,sticky='w', padx=10,pady=10)
-        self.v = tk.IntVar()
-        self.LB2 = RadioButton(self,parent.app.theme_manager,"Raw",NoSelect,Select,self.VideoType,self.v,1)
-        self.LB2.grid(row=9, column=0, sticky='w',padx=10)
-        self.LB3 = RadioButton(self,parent.app.theme_manager,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
-        self.LB3.grid(row=9, column=0, sticky='w', padx=110)
-        self.LB4 = RadioButton(self,parent.app.theme_manager,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
-        self.LB4.grid(row=9, column=0, sticky='w', padx=210)
-        # Bounding Box - Yes/No
-        BoundingBoxLabel1 = tk.Label(self, text="Bounding Box", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", BoundingBoxLabel1)
-        parent.app.theme_manager.register_item("txt", BoundingBoxLabel1)
-        BoundingBoxLabel1.grid(row=10,column=0,sticky='w',padx=10,pady=10)
-        self.BBI = tk.IntVar()
-        self.LB5 = CheckButton(self, parent.app.theme_manager, Yes,No,self.BoundingBox,self.BBI)
-        self.LB5.grid(row=11, column=0, sticky="w", padx=10)
         BoundingBoxLabel2 = tk.Label(self, text="Playback Buffer Size", font=("Rockwell",16))
         parent.app.theme_manager.register_item("bgr", BoundingBoxLabel2)
         parent.app.theme_manager.register_item("txt", BoundingBoxLabel2)
@@ -365,149 +361,67 @@ class SettingsPage(tk.Frame):
     # Set Saved Video Directory and Display Label
     def SetDirectory(self):
         outputLocation = filedialog.askdirectory()
-        if outputLocation == "":
-            print("error")
-        else:
+        if not (outputLocation == ""):
             config = configparser.ConfigParser()
             config.read("config.ini")
             config.set("General", "OutputPath", outputLocation)
             with open('config.ini', 'w') as f:
                 config.write(f)
             self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
+    
     #Set the Generate Video config
     def GenerateVideo(self):
         self.config.read("config.ini")
         v = self.SVB.get()
-        if v == 1:
-            self.config.set("Video", "Generate_Video", "0")
-            self.LB2.config(state="disabled")
-            self.LB3.config(state="disabled")
-            self.LB4.config(state="disabled")
-            self.LB5.config(state="disabled")
-        elif v == 0:
-            self.config.set("Video", "Generate_Video", "1")
-            self.LB2.config(state="normal")
-            self.LB3.config(state="normal")
-            self.LB4.config(state="normal")
-            self.LB5.config(state="normal")
+        self.config.set("Video", "Generate_Video", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
+
     #Opens file path
     def OpenPath(self):
         self.config.read("config.ini")
         output = self.config.get("General", "OutputPath")
         subprocess.Popen(f'explorer {os.path.realpath(output)}')
-    #Change config for Type of Video Generated
-    def VideoType(self):
-        v = self.v.get()
-        if v == 1:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Raw')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 2:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Greyscale')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 3:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Mouse')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-    #Changes config for bounding box in Video to Yes
-    def BoundingBox(self):
-        self.config.read("config.ini")
-        v = self.BBI.get()
-        print(v)
-        if v == 1:
-            self.config.set("Video", "Bounding_Box", "0")
-        elif v == 0:
-            self.config.set("Video", "Bounding_Box", "1")
-        with open('config.ini', 'w') as f:
-            self.config.write(f)
+
     #Changes config for playback buffer size
     def BufferSize(self):
+        self.config.read("config.ini")
         bs = self.BS.get()
-        if bs == 1:
-            self.config.read("config.ini")
-            self.config.set("Video", "Buffer_Size", '16')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if bs == 2:
-            self.config.read("config.ini")
-            self.config.set("Video", "Buffer_Size", '32')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if bs == 3:
-            self.config.read("config.ini")
-            self.config.set("Video", "Buffer_Size", '64')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if bs == 4:
-            self.config.read("config.ini")
-            self.config.set("Video", "Buffer_Size", '128')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
+        self.config.set("Video", "Buffer_Size", self.lookup_buffer[bs])
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+
     #Changes config for mouse location tracking
     def MouseTracking(self):
         self.config.read("config.ini")
-        v = self.MTI.get()
-        if v == 1:
-            self.config.set("Data", "Tracking_Data", "0")
-        elif v == 0:
-            self.config.set("Data", "Tracking_Data", "1")
+        self.MTI.get()
+        self.config.set("Data", "Tracking_Data", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
+
     #Changes config for post estimation
     def MouseBehaviour(self):
         self.config.read("config.ini")
         v = self.MBI.get()
-        if v == 1:
-            self.config.set("Data", "Behaviour_Data", "0")
-        elif v == 0:
-            self.config.set("Data", "Behaviour_Data", "1")
+        self.config.set("Data", "Behaviour_Data", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
+
     def ThemeSave(self):
+        self.config.read("config.ini")
         v = self.ti.get()
-        if v == 1:
-            self.config.read("config.ini")
-            self.config.set("General", "Theme", 'Light')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 2:
-            self.config.read("config.ini")
-            self.config.set("General", "Theme", 'Dark')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 3:
-            self.config.read("config.ini")
-            self.config.set("General", "Theme", 'Debug')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
+        self.config.set("General", "Theme", self.lookup_theme[v])
+        with open('config.ini', 'w') as f:
+            self.config.write(f)
+        self.theme_manager.apply_theme_name(self.lookup_theme[v])
+
     def togglebuttons(self):
         outputLocation = self.config.get('General', 'OutputPath')
-        print(os.path.exists(outputLocation))
         if not os.path.exists(outputLocation):
             self.config.set("General", "OutputPath", 'No Valid File Path Detected ')
             with open('config.ini', 'w') as f:
                 self.config.write(f)
             self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
-        Variable = self.config.get('Video', 'video_type')
-        if Variable == "Raw":
-            self.LB2.select()
-        if Variable == "Greyscale":
-            self.LB3.select()
-        if Variable == "Mouse":
-            self.LB4.select()
-        Variable = self.config.get('Video', 'Generate_Video')
-        if Variable == '0':
-            self.LB2.config(state="disabled")
-            self.LB3.config(state="disabled")
-            self.LB4.config(state="disabled")
-            self.LB5.config(state="disabled")
-            self.LB1.select()
         Variable = self.config.get('Data', 'tracking_data')
         if Variable == '0':
             self.RB1.select()
@@ -613,6 +527,10 @@ class VideoQueue(tk.Frame):
 
     # Constructor
     def __init__(self, parent, theme_manager):
+        # Get maximum buffer size
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        self.buffer_size = int(self.config.get("Video", "Buffer_Size"))
         # Call superclass constructor
         tk.Frame.__init__(self, parent)
         # Configure column and row weights
@@ -643,7 +561,7 @@ class VideoQueue(tk.Frame):
     # Function to add a video
     def add_video(self, video):
         # Add video to the array
-        video_input = iomanager.VideoInput(video)
+        video_input = iomanager.VideoInput(video, self.buffer_size)
         self.videos.append(video_input)
         # Get videos count
         count = len(self.videos)
@@ -693,14 +611,19 @@ class VideoPlayer(tk.Frame):
     play_image_hover = None
     pause_image = None
     pause_image_hover = None
+    buffer_size = 128
     buffer = None
 
     drawn = 0
 
     # Constructor
     def __init__(self, parent, theme_manager):
+        # Get maximum buffer size
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        self.buffer_size = int(self.config.get("Video", "Buffer_Size"))
         # Create read buffer
-        self.buffer = Queue(maxsize=128)
+        self.buffer = Queue(maxsize=self.buffer_size)
         # Load images
         self.play_image = ImageTk.PhotoImage(file="../Assets/ButtonPlay.png")
         self.play_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPlayHover.png")
@@ -1095,7 +1018,6 @@ class Theme:
 class ThemeManager:
     # Variables
     themes = []
-    current_theme_index = 0
     current_theme = None
     items = {
         "bgr": [],
@@ -1127,18 +1049,6 @@ class ThemeManager:
         # Append the new item on the correct type
         self.items[objtype].append(obj)
 
-    # Rotate to the next theme
-    def rotate_theme(self):
-        # Increment if not at the end of the themes list
-        if (self.current_theme_index < (len(self.themes) - 1)):
-            self.current_theme_index += 1
-        else:
-            self.current_theme_index = 0
-        # Apply the new theme
-        self.apply_theme(self.themes[self.current_theme_index])
-        # Return the theme name
-        return self.themes[self.current_theme_index]._name
-
     # Apply a theme
     def apply_theme(self, theme):
         # Update the current theme
@@ -1167,15 +1077,20 @@ class ThemeManager:
         # Iterate face colour container items
         for item in self.items["face"]:
             item.configure(facecolor=theme._bgcolor)
-
         for func in callbacks:
             func(theme)
+            
+    def apply_theme_name(self, theme_name):
+        # Get the theme from name
+        new_theme = next((t for t in self.themes if t._name == theme_name), None)
+        # Apply the theme
+        self.apply_theme(new_theme)
 
     def apply_last_theme(self):
         # Get the last theme
-        settings = self.get_last_theme()
+        theme = self.get_last_theme()
         # Apply the last theme
-        self.apply_theme(Theme(settings[0],settings[1],settings[2],settings[3],settings[4]))
+        self.apply_theme_name(theme)
 
     def getCurrentTheme(self):
         return self.themes[current_theme_index]
@@ -1195,14 +1110,9 @@ class ThemeManager:
 
     # Get the last used theme
     def get_last_theme(self):
-        # Open the settings file
-        settingsFile = open('../settings.txt', 'r+')
-        # Create array to store settings
-        settings = []
-        # Iterate all lines in find and append the line without line ending
-        for line in settingsFile:
-            settings.append(line.strip('\n'))
-        # Close the settings file
-        settingsFile.close()
-        # Return the compiled settings
-        return settings
+        # Create config and read file
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        v = self.config.get('General', 'Theme')
+        # Set the theme by name
+        return v

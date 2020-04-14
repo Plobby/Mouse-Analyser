@@ -42,6 +42,7 @@ def otsuThreshold(inpFrame):
         for i in range(threshold, 256):
             sumValues += hist[i] * i
 
+        #print(pixelsForeground + " total foreground pixels!")
         meanForeground = sumValues / pixelsForeground
 
         #Calculate Between Class Variance for the frame
@@ -63,8 +64,8 @@ def thresholdSegment(inpFrame, threshold):
     frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
 
     # #Percentages of x and y to not include in foreground
-    borderPercentX = 0.1
-    borderPercentY = 0.1
+    borderPercentX = 0.05
+    borderPercentY = 0.05
 
     xRange = range(int(inpFrame.shape[0] * borderPercentX), int(inpFrame.shape[0] - (inpFrame.shape[0] * borderPercentX)))
     yRange = range(int(inpFrame.shape[1] * borderPercentY), int(inpFrame.shape[1] - (inpFrame.shape[1] * borderPercentX)))

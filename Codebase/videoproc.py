@@ -1,7 +1,6 @@
 import cv2
 import threading
 
-import iomanager
 import segmentation as seg
 import ccl
 import time
@@ -9,7 +8,7 @@ import time
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
-def processVideo(videoSource, doSaveVid):
+def processVideo(videoSource, doSaveVid, outputLocation):
     #Dictionary containing bounding box locations for each frame (key = frame position)
     frameBoundingBoxes = {}
     #List of unprocessed frames, by frame position in video
@@ -29,11 +28,11 @@ def processVideo(videoSource, doSaveVid):
     #Step through frames of video
     while video.isOpened():
         startTime = time.time()
+
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
         #Set default bounding box in case no bounding box is ever found
         frameBoundingBoxes[framePos] = [0, 0, 0, 0]
-
         #Calculate bounding box size for mouse in frame
         boundingBox = processFrame(frame, videoThreshold)
 
@@ -50,7 +49,6 @@ def processVideo(videoSource, doSaveVid):
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
-        print(str(framePos) + ": " + str(time.time() - startTime))
         #Break while loop if return flag is false
         if not ret:
             break
@@ -68,12 +66,10 @@ def processVideo(videoSource, doSaveVid):
             except:
                 fileName = 'untitled'
 
-        source = videoSource.replace(split[-1], '')
-
         #Create cv2 VideoWriter object to output bounded video
-        out = cv2.VideoWriter(source + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+        out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
-        print(source + fileName + '-bounded.mp4')
+        print(outputLocation + "/" + fileName + '-bounded.mp4')
 
     #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
     mouseData = []
@@ -102,7 +98,7 @@ def processVideo(videoSource, doSaveVid):
         
         #Find width of mouse
         mouseWidth = box[3] - box[2]
-        #Find height of mouse
+        #Find height of mouseCCL
         mouseHeight = box[1] - box[0]
         #Find centre of mass of mouse
         mouseCOM = (box[2] + (mouseWidth / 2), box[0] + (mouseHeight / 2))
@@ -128,7 +124,7 @@ def processFrame(frame, threshold):
      #Create segmented version of frame
     segmented = seg.thresholdSegment(frame, threshold)
     #Find all objects in segmented frame using CCL
-    objects = CCL.CCL(segmented)
+    objects = ccl.CCL(segmented)
     
     #Create array to hold sorted objects keys
     sortedKeys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)
