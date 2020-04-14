@@ -157,13 +157,16 @@ class VideoPage(tk.Frame):
 
 class DataPage(tk.Frame):
     def __init__(self, parent):
+        # Set theme manager
+        self.theme_manager = parent.app.theme_manager
+
         # Call superclass function
         tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
-        parent.app.theme_manager.register_item("bgr", self)
+        self.theme_manager.register_item("bgr", self)
 
+        # Create graph figure and generator
         graphFigure = plt.figure() # Figure for graphing.
-        #parent.app.theme_manager.register_item("face", graphFigure)
         graphGenerator = graph.dataGraph() # object to store datagraph in.
 
         xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
@@ -186,48 +189,52 @@ class DataPage(tk.Frame):
         xLabels2 = [5,6,7,8,5,6]
         yValues2 = [4,5,6,7,8,3]
 
-        #graphFigure, self.myPlot = graphGenerator.createBasicBarChart(graphFigure, [5,6,7,8], [4,5,6,7])
-        #graphFigure, self.myPlot = graphGenerator.createStackedBarChart(graphFigure,1,30,xLabels,newList)
-        graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, [[100,120,140,150,160,140,200],[100,120,130,140,150,160,210]],640,480)
+        self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, [[100,120,140,150,160,140,200],[100,120,130,140,150,160,210]],640,480)
 
+        # Title entry field
         titleEntry = tk.Entry(self)
-        #parent.app.theme_manager.register_item("bgr", titleEntry)
-        #parent.app.theme_manager.register_item("txt", titleEntry)
+        self.theme_manager.register_item("bgr", titleEntry)
+        self.theme_manager.register_item("txt", titleEntry)
         titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
-        setButton = tk.Button(self, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry,self.myPlot))
-        #parent.app.theme_manager.register_item("bgr", setButton)
-        #parent.app.theme_manager.register_item("txt", setButton)
+
+        # Set title button
+        setButton = tk.Button(self, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry, self.myPlot))
+        self.theme_manager.register_item("bgr", setButton)
+        self.theme_manager.register_item("txt", setButton)
         setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
 
-        #parent.app.theme_manager.register_item("bgr", self.myPlot)
-        #self.myPlot.tick_params(labelcolor=color_text, color=color_container)
-        #for spine in self.myPlot.spines.values():
-            #spine.set_edgecolor(color_container)
+        # Register theme change callback
+        self.theme_manager.register_callback(self.on_theme_change)
 
-        parent.app.theme_manager.add_callback(lambda: update_graph(theme_manager.getCurrentTheme))
+        # Create and draw canvas
+        self.canvas = FigureCanvasTkAgg(self.graphFigure, self)
+        self.canvas.draw()
+        # Configure in tkinter display
+        self.canvas.get_tk_widget().grid(row=3, column=2, rowspan=99)
 
-        #self.myPlot.set_xlabel("Time (s)", color = color_text)
-        #self.myPlot.set_ylabel("Activity per Division", color =  color_text)
-
-        canvas1 = FigureCanvasTkAgg(graphFigure, self)
-        canvas1.draw()
-        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
-
-
-        def update_graph(theme):
-            # Update stuff here
-            for spine in self.myPlot.spines.values():
-                spine.set_edgecolor()
+    def on_theme_change(self, theme):
+        # Update graph figure
+        self.graphFigure.set_facecolor(theme.background())
+        # Update plot
+        self.myPlot.tick_params(labelcolor=theme.text(), color=theme.container())
+        self.myPlot.set_facecolor(theme.container())
+        # Update plot spines
+        for spine in self.myPlot.spines.values():
+            spine.set_edgecolor(theme.container())
+        # Update axes
+        self.myPlot.set_xlabel("Time (s)", color=theme.text())
+        self.myPlot.set_ylabel("Activity per Division", color=theme.text())
+        # Redraw
+        self.canvas.draw()
 
     def showBarChart(self,graphFigure,graphGenerator,canvas1):
         # Code to implement graph on canvas + page
-
         canvas1.draw()
         canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
 
     def getAndSetTitle(self, titleEntry, myPlot):
-        title = titleEntry.get()
-        #myPlot.set_title(title, color = color_text)
+        # Update title
+        myPlot.set_title(titleEntry.get(), color=self.theme_manager.get_current_theme.text())
 
 class SettingsPage(tk.Frame):
     lookup_boolean = {
@@ -1031,6 +1038,7 @@ class ThemeManager:
         "face": []
     }
     container = None
+    callbacks = []
 
     # Constructor
     def __init__(self, container):
@@ -1048,6 +1056,11 @@ class ThemeManager:
     def register_item(self, objtype, obj):
         # Append the new item on the correct type
         self.items[objtype].append(obj)
+    
+    # Register a callback function
+    def register_callback(self, func):
+        # Append the callback function
+        self.callbacks.append(func)
 
     # Apply a theme
     def apply_theme(self, theme):
@@ -1077,36 +1090,27 @@ class ThemeManager:
         # Iterate face colour container items
         for item in self.items["face"]:
             item.configure(facecolor=theme._bgcolor)
-        for func in callbacks:
+        # Iterate callback functions and invoke
+        for func in self.callbacks:
             func(theme)
-            
+    
+    # Function to apply a theme based on name
     def apply_theme_name(self, theme_name):
         # Get the theme from name
         new_theme = next((t for t in self.themes if t._name == theme_name), None)
         # Apply the theme
         self.apply_theme(new_theme)
 
+    # Function to apply the last theme
     def apply_last_theme(self):
         # Get the last theme
         theme = self.get_last_theme()
         # Apply the last theme
         self.apply_theme_name(theme)
 
-    def getCurrentTheme(self):
-        return self.themes[current_theme_index]
-
-    def getBackground(self):
-        return self.themes[current_theme_index].background()
-
-    def getHover(self):
-        return self.themes[current_theme_index].hover()
-
-    def getContainer(self):
-        return self.themes[current_theme_index].container()
-
-    def getText(self):
-        return self.themes[current_theme_index].text()
-
+    # Function to get the current theme
+    def get_current_theme(self):
+        return self.current_theme
 
     # Get the last used theme
     def get_last_theme(self):
