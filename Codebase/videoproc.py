@@ -51,11 +51,7 @@ def processVideo(videoSource, doSaveVid):
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
-<<<<<<< HEAD
-        print(str(framePos) + "/" + str(frameMax) + ": " + str(time.time() - startTime))
-=======
         print("frame " + str(int(framePos)) + ": " + str(time.time() - startTime)[:4] + "s")
->>>>>>> 0e0dfc9214c7fc56933a30d544d5b6f763c020e9
         #Break while loop if return flag is false
         if not ret:
             break
