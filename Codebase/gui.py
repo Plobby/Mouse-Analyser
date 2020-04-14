@@ -148,10 +148,14 @@ class VideoPage(tk.Frame):
         videos = self.video_queue.get_videos()
         print(videos)
         filecheck = videos[0].file
-        #videos[0].start()
-        #videos[0].close()
-        #time.sleep(10)
-        videoproc.processVideo(filecheck, doSaveVid=True)
+
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        outputLocation = self.config.get("General", "outputPath")
+        generateBoundedVideo =  True if self.config.get("Video", "generate_video") == "1" else False
+
+        print(generateBoundedVideo)
+        videoproc.processVideo(filecheck, doSaveVid=generateBoundedVideo, outputLocation=outputLocation)
 
 class DataPage(tk.Frame):
     def __init__(self, parent):
@@ -289,7 +293,7 @@ class SettingsPage(tk.Frame):
         parent.app.theme_manager.register_item("txt", VideoLabel)
         VideoLabel.grid(row=5,column=0,sticky="w",pady=10,padx=10)
         # SaveVideo - Yes/No
-        SaveLabel= tk.Label(self, text="Generate Video File", font=("Rockwell",16))
+        SaveLabel= tk.Label(self, text="Generate Bounding Box Video File", font=("Rockwell",16))
         parent.app.theme_manager.register_item("bgr", SaveLabel)
         parent.app.theme_manager.register_item("txt", SaveLabel)
         SaveLabel.grid(row=6, column=0, sticky='w',padx=10,pady=10)
@@ -297,25 +301,25 @@ class SettingsPage(tk.Frame):
         self.LB1 = CheckButton(self, parent.app.theme_manager,Yes,No,self.GenerateVideo, self.SVB)
         self.LB1.grid(row=7,column=0,sticky="w",padx=10)
         # Video Type RadioButton
-        VideoTypeLabel = tk.Label(self, text="Video Type", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", VideoTypeLabel)
-        parent.app.theme_manager.register_item("txt", VideoTypeLabel)
-        VideoTypeLabel.grid(row=8, column=0,sticky='w', padx=10,pady=10)
-        self.v = tk.IntVar()
-        self.LB2 = RadioButton(self,parent.app.theme_manager,"Raw",NoSelect,Select,self.VideoType,self.v,1)
-        self.LB2.grid(row=9, column=0, sticky='w',padx=10)
-        self.LB3 = RadioButton(self,parent.app.theme_manager,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
-        self.LB3.grid(row=9, column=0, sticky='w', padx=110)
-        self.LB4 = RadioButton(self,parent.app.theme_manager,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
-        self.LB4.grid(row=9, column=0, sticky='w', padx=210)
+        # VideoTypeLabel = tk.Label(self, text="Video Type", font=("Rockwell",16))
+        # parent.app.theme_manager.register_item("bgr", VideoTypeLabel)
+        # parent.app.theme_manager.register_item("txt", VideoTypeLabel)
+        # VideoTypeLabel.grid(row=8, column=0,sticky='w', padx=10,pady=10)
+        # self.v = tk.IntVar()
+        # self.LB2 = RadioButton(self,parent.app.theme_manager,"Raw",NoSelect,Select,self.VideoType,self.v,1)
+        # self.LB2.grid(row=9, column=0, sticky='w',padx=10)
+        # self.LB3 = RadioButton(self,parent.app.theme_manager,"Greyscale",NoSelect,Select,self.VideoType,self.v,2)
+        # self.LB3.grid(row=9, column=0, sticky='w', padx=110)
+        # self.LB4 = RadioButton(self,parent.app.theme_manager,"Mouse",NoSelect,Select,self.VideoType,self.v,3)
+        # self.LB4.grid(row=9, column=0, sticky='w', padx=210)
         # Bounding Box - Yes/No
-        BoundingBoxLabel1 = tk.Label(self, text="Bounding Box", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", BoundingBoxLabel1)
-        parent.app.theme_manager.register_item("txt", BoundingBoxLabel1)
-        BoundingBoxLabel1.grid(row=10,column=0,sticky='w',padx=10,pady=10)
-        self.BBI = tk.IntVar()
-        self.LB5 = CheckButton(self, parent.app.theme_manager, Yes,No,self.BoundingBox,self.BBI)
-        self.LB5.grid(row=11, column=0, sticky="w", padx=10)
+        # BoundingBoxLabel1 = tk.Label(self, text="Bounding Box", font=("Rockwell",16))
+        # parent.app.theme_manager.register_item("bgr", BoundingBoxLabel1)
+        # parent.app.theme_manager.register_item("txt", BoundingBoxLabel1)
+        # BoundingBoxLabel1.grid(row=10,column=0,sticky='w',padx=10,pady=10)
+        # self.BBI = tk.IntVar()
+        # self.LB5 = CheckButton(self, parent.app.theme_manager, Yes,No,self.BoundingBox,self.BBI)
+        # self.LB5.grid(row=11, column=0, sticky="w", padx=10)
         BoundingBoxLabel2 = tk.Label(self, text="Playback Buffer Size", font=("Rockwell",16))
         parent.app.theme_manager.register_item("bgr", BoundingBoxLabel2)
         parent.app.theme_manager.register_item("txt", BoundingBoxLabel2)
@@ -372,16 +376,16 @@ class SettingsPage(tk.Frame):
         v = self.SVB.get()
         if v == 1:
             self.config.set("Video", "Generate_Video", "0")
-            self.LB2.config(state="disabled")
-            self.LB3.config(state="disabled")
-            self.LB4.config(state="disabled")
-            self.LB5.config(state="disabled")
+            # self.LB2.config(state="disabled")
+            # self.LB3.config(state="disabled")
+            # self.LB4.config(state="disabled")
+            # self.LB5.config(state="disabled")
         elif v == 0:
             self.config.set("Video", "Generate_Video", "1")
-            self.LB2.config(state="normal")
-            self.LB3.config(state="normal")
-            self.LB4.config(state="normal")
-            self.LB5.config(state="normal")
+            # self.LB2.config(state="normal")
+            # self.LB3.config(state="normal")
+            # self.LB4.config(state="normal")
+            # self.LB5.config(state="normal")
         with open('config.ini', 'w') as f:
             self.config.write(f)
     #Opens file path
@@ -390,34 +394,34 @@ class SettingsPage(tk.Frame):
         output = self.config.get("General", "OutputPath")
         subprocess.Popen(f'explorer {os.path.realpath(output)}')
     #Change config for Type of Video Generated
-    def VideoType(self):
-        v = self.v.get()
-        if v == 1:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Raw')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 2:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Greyscale')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
-        if v == 3:
-            self.config.read("config.ini")
-            self.config.set("Video", "Video_Type", 'Mouse')
-            with open('config.ini', 'w') as f:
-                self.config.write(f)
+    # def VideoType(self):
+    #     v = self.v.get()
+    #     if v == 1:
+    #         self.config.read("config.ini")
+    #         self.config.set("Video", "Video_Type", 'Raw')
+    #         with open('config.ini', 'w') as f:
+    #             self.config.write(f)
+    #     if v == 2:
+    #         self.config.read("config.ini")
+    #         self.config.set("Video", "Video_Type", 'Greyscale')
+    #         with open('config.ini', 'w') as f:
+    #             self.config.write(f)
+    #     if v == 3:
+    #         self.config.read("config.ini")
+    #         self.config.set("Video", "Video_Type", 'Mouse')
+    #         with open('config.ini', 'w') as f:
+    #             self.config.write(f)
     #Changes config for bounding box in Video to Yes
-    def BoundingBox(self):
-        self.config.read("config.ini")
-        v = self.BBI.get()
-        print(v)
-        if v == 1:
-            self.config.set("Video", "Bounding_Box", "0")
-        elif v == 0:
-            self.config.set("Video", "Bounding_Box", "1")
-        with open('config.ini', 'w') as f:
-            self.config.write(f)
+    # def BoundingBox(self):
+    #     self.config.read("config.ini")
+    #     v = self.BBI.get()
+    #     print(v)
+    #     if v == 1:
+    #         self.config.set("Video", "Bounding_Box", "0")
+    #     elif v == 0:
+    #         self.config.set("Video", "Bounding_Box", "1")
+    #     with open('config.ini', 'w') as f:
+    #         self.config.write(f)
     #Changes config for playback buffer size
     def BufferSize(self):
         bs = self.BS.get()
@@ -486,20 +490,20 @@ class SettingsPage(tk.Frame):
             with open('config.ini', 'w') as f:
                 self.config.write(f)
             self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
-        Variable = self.config.get('Video', 'video_type')
-        if Variable == "Raw":
-            self.LB2.select()
-        if Variable == "Greyscale":
-            self.LB3.select()
-        if Variable == "Mouse":
-            self.LB4.select()
-        Variable = self.config.get('Video', 'Generate_Video')
-        if Variable == '0':
-            self.LB2.config(state="disabled")
-            self.LB3.config(state="disabled")
-            self.LB4.config(state="disabled")
-            self.LB5.config(state="disabled")
-            self.LB1.select()
+        # Variable = self.config.get('Video', 'video_type')
+        # if Variable == "Raw":
+        #     self.LB2.select()
+        # if Variable == "Greyscale":
+        #     self.LB3.select()
+        # if Variable == "Mouse":
+        #     self.LB4.select()
+        # Variable = self.config.get('Video', 'Generate_Video')
+        # if Variable == '0':
+        #     self.LB2.config(state="disabled")
+        #     self.LB3.config(state="disabled")
+        #     self.LB4.config(state="disabled")
+        #     self.LB5.config(state="disabled")
+        #     self.LB1.select()
         Variable = self.config.get('Data', 'tracking_data')
         if Variable == '0':
             self.RB1.select()
