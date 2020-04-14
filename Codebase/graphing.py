@@ -31,7 +31,6 @@ class dataGraph():
     def __init__(self):
         self._xList = []
         self._yList = []
-        print("Data graph initialised.")
 
     def createBasicBarChart(self,f,barNames,barHeights): # If the barheights are already calculated.
         innerPlot = f.add_subplot(1,1,1)
@@ -60,15 +59,12 @@ class dataGraph():
 
                 indexDict += [tempList] # Slowly creating a 2d list by storing each kind of action as a binary list of whether it's currently being performed.
                 tempList = [] # Empty the temporary list once it's finished :)
-
-            #print("INDEX")
-            #print(indexDict)
             barValues = []
             tempList = []
 
             # Next step is to turn the new binary lists into graphable values.
 
-            print("Should be five:", round(timePeriodPerBar/timeGapPerReportedPosition))
+            #print("Should be five:", round(timePeriodPerBar/timeGapPerReportedPosition))
 
             for listItem in indexDict: # For each list inside the index...
                 loopInt = 1

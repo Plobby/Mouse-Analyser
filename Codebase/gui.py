@@ -198,7 +198,7 @@ class DataPage(tk.Frame):
         titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
 
         # Set title button
-        setButton = tk.Button(self, text = "Set Title", command = lambda:self.getAndSetTitle(titleEntry, self.myPlot))
+        setButton = tk.Button(self, text="Set Title", command=lambda: self.set_title(titleEntry, self.myPlot))
         self.theme_manager.register_item("bgr", setButton)
         self.theme_manager.register_item("txt", setButton)
         setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
@@ -224,17 +224,21 @@ class DataPage(tk.Frame):
         # Update axes
         self.myPlot.set_xlabel("Time (s)", color=theme.text())
         self.myPlot.set_ylabel("Activity per Division", color=theme.text())
+        # Update title color
+        self.myPlot.set_title(self.myPlot.get_title(), color=theme.text())
         # Redraw
         self.canvas.draw()
 
-    def showBarChart(self,graphFigure,graphGenerator,canvas1):
+    def shadow_bar_chart(self, graphFigure, graphGenerator, canvas):
         # Code to implement graph on canvas + page
-        canvas1.draw()
-        canvas1.get_tk_widget().grid(row = 3, column = 2, rowspan = 99)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=3, column=2, rowspan=99)
 
-    def getAndSetTitle(self, titleEntry, myPlot):
+    def set_title(self, titleEntry, myPlot):
         # Update title
-        myPlot.set_title(titleEntry.get(), color=self.theme_manager.get_current_theme.text())
+        myPlot.set_title(titleEntry.get(), color=self.theme_manager.get_current_theme().text())
+        # Redraw
+        self.canvas.draw()
 
 class SettingsPage(tk.Frame):
     lookup_boolean = {
