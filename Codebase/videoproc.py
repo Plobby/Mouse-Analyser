@@ -27,7 +27,6 @@ def processVideo(videoSource, doSaveVid):
 
     #Step through frames of video
     while video.isOpened():
-        startTime = time.time()
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
         frameMax = video.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -51,7 +50,6 @@ def processVideo(videoSource, doSaveVid):
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
-        print("frame " + str(int(framePos)) + ": " + str(time.time() - startTime)[:4] + "s")
         #Break while loop if return flag is false
         if not ret:
             break
