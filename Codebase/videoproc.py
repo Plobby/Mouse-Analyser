@@ -8,7 +8,7 @@ import time
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
-def processVideo(videoSource, doSaveVid):
+def processVideo(videoSource, doSaveVid, outputLocation):
     #Dictionary containing bounding box locations for each frame (key = frame position)
     frameBoundingBoxes = {}
     #List of unprocessed frames, by frame position in video
@@ -27,6 +27,8 @@ def processVideo(videoSource, doSaveVid):
 
     #Step through frames of video
     while video.isOpened():
+        startTime = time.time()
+
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
         #Set default bounding box in case no bounding box is ever found
@@ -64,12 +66,10 @@ def processVideo(videoSource, doSaveVid):
             except:
                 fileName = 'untitled'
 
-        source = videoSource.replace(split[-1], '')
-
         #Create cv2 VideoWriter object to output bounded video
-        out = cv2.VideoWriter(source + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+        out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
-        print(source + fileName + '-bounded.mp4')
+        print(outputLocation + "/" + fileName + '-bounded.mp4')
 
     #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
     mouseData = []
