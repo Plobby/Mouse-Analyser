@@ -40,7 +40,7 @@ def get_videos(multiple):
     # Return the videos
     return videos
 
-#Function to save a *LIST* of CV2 VideoCapture objects
+# Function to save a *LIST* of CV2 VideoCapture objects
 def save_videos(videoCaps, outputLocation):
     if outputLocation == None: #This is for GUI mode, where a directory is not already given
         #Open folder selection dialog box

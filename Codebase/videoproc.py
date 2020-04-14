@@ -31,10 +31,8 @@ def processVideo(videoSource, doSaveVid, outputLocation):
 
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
-        frameMax = video.get(cv2.CAP_PROP_FRAME_COUNT)
         #Set default bounding box in case no bounding box is ever found
         frameBoundingBoxes[framePos] = [0, 0, 0, 0]
-        print(str(time.time() - startTime))
         #Calculate bounding box size for mouse in frame
         boundingBox = processFrame(frame, videoThreshold)
 
@@ -48,7 +46,6 @@ def processVideo(videoSource, doSaveVid, outputLocation):
             #Add current frame's bounding box to frameBoundingBoxes
             frameBoundingBoxes[framePos] = boundingBox
 
-        print(str(time.time() - startTime))
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
