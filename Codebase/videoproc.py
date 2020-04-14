@@ -152,5 +152,20 @@ def processFrame(frame, threshold):
         if coord[1] > MaxY:
             MaxY = coord[1]
 
+    #Apply heuristics to find invalid bounding boxes and return None
+    
+    #Height/width is too great
+    if (((MaxX - MinX) / (MaxY - MinY)) > 4):
+        return None
+    #Width/height is too great
+    if (((MaxY - MinY) / (MaxX - MaxY)) > 4):
+        return None
+    #Absolute height is too great
+    if (MaxX - MinX > frame.shape[0] / 4):
+        return None
+    #Absolute width is too great
+    if (MaxY - MinY > frame.shape[1] / 4):
+        return None
+
     #Return bounding box information
     return MinX, MaxX, MinY, MaxY
