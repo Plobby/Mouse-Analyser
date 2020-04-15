@@ -677,7 +677,6 @@ class VideoPlayer(tk.Frame):
     buffer = None
 
     drawn = 0
-    first_rendered = False
 
     # Constructor
     def __init__(self, parent, theme_manager):
@@ -755,24 +754,7 @@ class VideoPlayer(tk.Frame):
             self.buffer.queue.clear()
         # Show the first frame of the new source
         self.first_rendered = False
-        self.first_frame()
-
-    def first_frame(self):
-        # Check a source is present
-        if (not self.source is None and not self.source_input is None):
-            # Check if the first frame has already been rendered
-            if (self.first_rendered):
-                return
-            # Render the first frame
-            self.source_input.start(self.buffer)
-            # Wait a small delay to read frame
-            time.sleep(0.2)
-            # Stop filling buffer
-            self.source_input.stop()
-            # Draw frame
-            self._draw_first_frame(self.buffer)
-            # Mark as first frame drawn
-            self.first_rendered = True
+        self._draw_single_frame()
 
     # Function to toggle the video playing state
     def toggle(self):
@@ -823,32 +805,45 @@ class VideoPlayer(tk.Frame):
             # Reset drawn frame count
             self.drawn = 0
 
-    def start_time_change(self):
-        print("Start time change")
+    # Function to jump to a specific frame
+    def jump_frame(self, frame_number):
+        # Check a source is present
+        if (not self.source is None and not self.source_input is None):
+            # Clear any buffered frames
+            with self.buffer.mutex:
+                self.buffer.queue.clear()
+            # Set the current frame property
+            self.drawn = frame_number
+            self.source_input.frames_done = frame_number
 
-    def end_time_change(self):
-        print("End time change")
-
-    def _draw_first_frame(self, target):
-        # Get the first frame
-        try:
-            # Get the frame
-            frame = target.get(block=False)
-            # Process the frame and resize correctly
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = Image.fromarray(frame)
-            frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
-            frame = ImageTk.PhotoImage(image=frame)
-            # Draw the image
-            self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
-            self.frame = frame
-            # Increment drawn count
-            self.drawn += 1
-            # Update trackbar progress
-            self.controls_trackbar.update(self.drawn, self.source_input.frames_total)
-        except:
-            # Return - no frame found
-            return
+    def _draw_single_frame(self):
+         # Check a source is present
+        if (not self.source is None and not self.source_input is None):
+            # Render the first frame
+            self.source_input.start(self.buffer)
+            # Wait a small delay to read frame
+            time.sleep(0.2)
+            # Stop filling buffer
+            self.source_input.stop()
+            # Get the first frame
+            try:
+                # Get the frame
+                frame = self.buffer.get(block=False)
+                # Process the frame and resize correctly
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = Image.fromarray(frame)
+                frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
+                frame = ImageTk.PhotoImage(image=frame)
+                # Draw the image
+                self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
+                self.frame = frame
+                # Increment drawn count
+                self.drawn += 1
+                # Update trackbar progress
+                self.controls_trackbar.update(self.drawn, self.source_input.frames_total)
+            except:
+                # Return - no frame found
+                return
 
     # Function to draw a frame
     def _draw_frame(self, target):
@@ -896,6 +891,10 @@ class VideoTrackbar(tk.Canvas):
     last_end = -1
     last_time = "0:00:00 / 0:00:00"
 
+    dragged_frame = None
+    dragged_playing = False
+    dragged_last_time = time.time()
+
     # Constructor
     def __init__(self, parent, theme_manager, player):
         # Bind parent
@@ -937,20 +936,46 @@ class VideoTrackbar(tk.Canvas):
 
     # Function for when the mouse is pressed down
     def mouse_down(self, event):
-        # Check if the video player has a source
-        if (self.player.source is None):
-            return
         # Get the bar coordinates
         bar = self.coords(self.bar_end)
         # Check if the click was on the bar
         if (event.x >= bar[0] and event.x <= bar[2] and event.y >= bar[1] and event.y <= bar[3]):
+            # Check if the video player has a source
+            if (self.player.source is None):
+                return
             self.mousedown = True
-            self._draw_pointer(event.x)
+            # Check if the video player is playing
+            if (self.player.playing):
+                self.dragged_playing = True
+                self.player.pause()
+            # Draw new pointer
+            self._draw_pointer(event.x - 10)
+            # Calculate new frame location
+            width = bar[2] - bar[0]
+            pos = event.x - bar[0]
+            # Calculate a multiplication factor to go to the new frame
+            factor = pos / width
+            # Calculate new frame position
+            self.dragged_frame = math.floor(self.end_frame * factor)
 
     # Function for when the mouse is released
     def mouse_up(self, event):
         # Set to false
+        if (not self.mousedown):
+            return
         self.mousedown = False
+        # Jump to the new calculated frame
+        if (not self.dragged_frame is None):
+            self.player.jump_frame(self.dragged_frame)
+            self.dragged_frame = None
+        # Await small delay for frames to settle
+        time.sleep(0.1)
+        # Restart player if playing when dragged
+        if (self.dragged_playing):
+            self.player.play()
+            self.dragged_playing = False
+        else:
+            self.player._draw_single_frame()
 
     # Function for when the mouse is dragged
     def mouse_drag(self, event):
@@ -961,7 +986,16 @@ class VideoTrackbar(tk.Canvas):
         bar = self.coords(self.bar_end)
         # Check if the click was within valid x bounds
         if (event.x >= bar[0] and event.x <= bar[2]):
-            self._draw_pointer(event.x)
+            self._draw_pointer(event.x - 10)
+            # Calculate new frame location
+            width = bar[2] - bar[0]
+            pos = event.x - bar[0]
+            # Calculate a multiplication factor to go to the new frame
+            factor = pos / width
+            # Calculate new frame position
+            self.dragged_frame = math.floor(self.end_frame * factor)
+            # Draw the dragged frame time
+            self._draw_dragged_time(self.dragged_frame)
 
     # Function for when the canvas is resized
     def _resize(self, event):
@@ -992,6 +1026,23 @@ class VideoTrackbar(tk.Canvas):
         self.coords(self.tracker_outer, x + 3, 28, x + 17, 42)
         self.coords(self.tracker_inner, x + 5, 30, x + 15, 40)
 
+    # Function to draw the dragged time progress on the video
+    def _draw_dragged_time(self, frame):
+        # Get video FPS
+        fps = self.player.source_input.frames_fps
+        elapsed = math.floor(frame / fps)
+        total = math.floor(self.end_frame / fps)
+        # Check if elapsed and total match the last time
+        if (elapsed == self.last_elapsed and total == self.last_end):
+            return
+        # Update to new time
+        self.last_elapsed = elapsed
+        self.last_end = total
+        # Convert seconds to displayable time
+        self.last_time = str(datetime.timedelta(seconds=elapsed)) + " / " + str(datetime.timedelta(seconds=total))
+        # Draw the time string
+        self.itemconfig(self.time_text, text=self.last_time)
+
     # Function to draw the time progress on the video
     def _draw_time(self):
         # Draw black if video has no source and return
@@ -1003,7 +1054,6 @@ class VideoTrackbar(tk.Canvas):
         else:
             # Get video FPS
             fps = self.player.source_input.frames_fps
-            #print(str(self.current_frame))
             elapsed = math.floor(self.current_frame / fps)
             total = math.floor(self.end_frame / fps)
             # Check if elapsed and total match the last time
