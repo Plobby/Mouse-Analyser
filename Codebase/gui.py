@@ -15,7 +15,7 @@ import cv2 as cv2
 import time
 import math
 import datetime
-from threading import Timer
+from threading import Timer, Thread
 from queue import Queue, Empty
 import videoproc
 import graphing as graph # Import graphing under name graph
@@ -100,6 +100,8 @@ class VideoPage(tk.Frame):
 
     # Constructor
     def __init__(self, parent):
+        # Bind parent
+        self.parent = parent.app
         self.mouseData = []
         # Call superclass function
         tk.Frame.__init__(self, parent)
@@ -146,20 +148,31 @@ class VideoPage(tk.Frame):
 
     # Function to process the user selected videos
     def process_videos(self):
-        #Get videos from video_queue
+        # Get videos from video_queue
         videos = self.video_queue.get_videos()
-        filecheck = videos[0].file
-        self.video_player.set_source(videos[0])
-        self.video_player.play()
+        # Get config setting for output path
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
-        outputLocation = self.config.get("General", "outputPath")
-        generateBoundedVideo =  True if self.config.get("Video", "generate_video") == "1" else False
-        
-        #Process all videos and append output to mouseData
+        output_location = self.config.get("General", "outputPath")
+        generate_bounded_video = True if self.config.get("Video", "generate_video") == "1" else False
+        # Create new thread
+        thread = Thread(target=self._process_videos, daemon=True, args=[videos, generate_bounded_video, output_location])
+        thread.start()
+    
+    # Private function to process videos on a separate thread
+    def _process_videos(self, videos, generate_bounded_video, output_location):
+        # Counter for video being processed
+        processing = 1
+        total = len(videos)
+        # Process all videos and append output to mouseData
         for video in videos:
-            self.mouseData.append(videoproc.processVideo(video.file, doSaveVid=generateBoundedVideo, outputLocation=outputLocation))
-        
+            # Set processing status
+            self.parent.status_bar.set_status("Processing video " + str(processing) + " of " + str(total))
+            # Start processing video
+            self.mouseData.append(videoproc.processVideo(video.file, doSaveVid=generate_bounded_video, outputLocation=output_location))
+            # Increment processing counter
+            processing += 1
+           
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Set theme manager
