@@ -62,12 +62,12 @@ def processVideo(videoSource, doSaveVid, outputLocation):
         fileName = split[-1].split('.')[0]    
 
         #Create cv2 VideoWriter object to output bounded video
-        if '/' in videoSource:
+        if '/' in outputLocation:
             out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
-        elif '\\' in videoSource:
+            print(outputLocation + "/" + fileName + '-bounded.mp4')
+        elif '\\' in outputLocation:
             out = cv2.VideoWriter(outputLocation + "\\" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
-        
-        print(outputLocation + "/" + fileName + '-bounded.mp4')
+            print(outputLocation + "\\" + fileName + '-bounded.mp4')
 
     #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
     mouseData = []
