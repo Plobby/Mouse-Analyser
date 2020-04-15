@@ -146,7 +146,15 @@ class VideoPage(tk.Frame):
 
     # Function to clear the user selected videos
     def clear_videos(self):
+        # Remove all videos from queue
         self.video_queue.clear_videos()
+        # Check if the player is playing
+        if (self.video_player.playing):
+            self.video_player.stop()
+        # Delete all from video player canvas
+        self.video_player.canvas.delete("all")
+        self.video_player.frame = None
+        self.video_player.controls_trackbar.reset()
 
     # Function to process the user selected videos
     def process_videos(self):
@@ -935,6 +943,16 @@ class VideoTrackbar(tk.Canvas):
         # Register theme change callback
         self.theme_manager.register_callback(self.on_theme_change)
 
+    # Function to reset the trackbar to default
+    def reset(self):
+        # Update variables
+        self.current_frame = 0
+        self.end_frame = 0
+        self.percent = 0
+        # Call redraw functions with new frames
+        self.redraw()
+        self._draw_time()
+
     # Update the current progress bar
     def update(self, current_frame, end_frame):
         # Update variables
@@ -943,7 +961,7 @@ class VideoTrackbar(tk.Canvas):
         # Calculate percentage completion from frames
         if (self.current_frame >= 0 and self.end_frame > 0):
             self.percent = (self.current_frame / self.end_frame)
-        # Call redraw function with new frames
+        # Call redraw functions with new frames
         self.redraw()
         self._draw_time()
 
