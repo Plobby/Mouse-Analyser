@@ -138,8 +138,6 @@ class VideoPage(tk.Frame):
     def import_videos(self):
         videos = iomanager.get_videos(True)
         self.video_queue.add_videos(videos)
-        if (len(videos) > 0):
-            self.video_player.set_source(videos[0])
 
     # Function to clear the user selected videos
     def clear_videos(self):
@@ -603,9 +601,16 @@ class VideoQueue(tk.Frame):
 
     # Function to add a video
     def add_video(self, video):
+        # Check if the video is already contained
+        for v in self.videos:
+            if (v.file == video):
+                return
         # Add video to the array
         video_input = iomanager.VideoInput(video, self.buffer_size)
         self.videos.append(video_input)
+        # Check if the video is the first video - if so, set as the playing content
+        if (len(self.videos) == 1):
+            self.player.set_source(video)
         # Get videos count
         count = len(self.videos)
         # Create video render
