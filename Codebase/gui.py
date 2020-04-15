@@ -174,6 +174,7 @@ class VideoPage(tk.Frame):
             self.processing_index += 1
         self.parent.status_bar.set_status("Ready to process.")
     
+    # Function to update the progress of the tracker
     def _progress_update(self, percentage):
         # Set processing status
         self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total) + " (" + "{:.1f}".format(percentage) + "%)")
