@@ -13,6 +13,8 @@ import subprocess
 import os
 import cv2 as cv2
 import time
+import math
+import datetime
 from threading import Timer
 from queue import Queue, Empty
 import videoproc
@@ -147,7 +149,8 @@ class VideoPage(tk.Frame):
     def process_videos(self):
         videos = self.video_queue.get_videos()
         filecheck = videos[0].file
-
+        self.video_player.set_source(videos[0])
+        self.video_player.play()
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         outputLocation = self.config.get("General", "outputPath")
@@ -533,6 +536,9 @@ class VideoQueue(tk.Frame):
     videos = []
     theme_manager = None
 
+    boxes = []
+    text = []
+
     render_height = 100
     render_spacing = 4
 
@@ -562,6 +568,8 @@ class VideoQueue(tk.Frame):
         self.scrollitems.config(yscrollcommand=self.scrollbar.set)
         # Bind self theme manager
         self.theme_manager = theme_manager
+        # Register update event
+        self.theme_manager.register_callback(self.on_theme_change)
 
     # Function to add multiple videos
     def add_videos(self, videos):
@@ -581,10 +589,10 @@ class VideoQueue(tk.Frame):
         if (count > 1):
             y1 += (count - 1) * 4
         # Render draw box
-        self.scrollitems.create_rectangle(0, y1, self.scrollitems.winfo_width(), y1 + 100, fill=self.theme_manager.current_theme._cntrcolor, outline="")
+        self.boxes.append(self.scrollitems.create_rectangle(0, y1, self.scrollitems.winfo_width(), y1 + 100, fill=self.theme_manager.current_theme.container(), outline=""))
         # Render video text
-        self.scrollitems.create_text(10, y1 + 10, fill=self.theme_manager.current_theme._txtcolor, text="Video: " + video, anchor="w")
-        self.scrollitems.create_text(10, y1 + 24, fill=self.theme_manager.current_theme._txtcolor, text="Length: " + video_input.video_length_str, anchor="w")
+        self.text.append(self.scrollitems.create_text(10, y1 + 10, fill=self.theme_manager.current_theme.text(), text="Video: " + video, anchor="w"))
+        self.text.append(self.scrollitems.create_text(10, y1 + 24, fill=self.theme_manager.current_theme.text(), text="Length: " + video_input.video_length_str, anchor="w"))
         # Configure scroll item height
         self.scrollitems.config(scrollregion=(0, 0, 0, (count * (self.render_height + self.render_spacing)) - self.render_spacing))
 
@@ -596,14 +604,25 @@ class VideoQueue(tk.Frame):
 
     # Function to clear the videos
     def clear_videos(self):
-        # Clear array
+        # Clear arrays
         self.videos = []
+        self.boxes = []
+        self.text = []
         # Clear the video render drawings
         self.scrollitems.delete("all")
 
     # Function to get the videos
     def get_videos(self):
         return self.videos
+
+    # Callback function for when the theme has been changed
+    def on_theme_change(self, theme):
+        # Update box colours
+        for box in self.boxes:
+            self.scrollitems.itemconfig(box, fill=theme.container())
+        # Update text colours
+        for txt in self.text:
+            self.scrollitems.itemconfig(txt, fill=theme.text())
 
 class VideoPlayer(tk.Frame):
     # Variables
@@ -793,12 +812,16 @@ class VideoTrackbar(tk.Canvas):
     percent = 0
     mousedown = False
 
+    last_elapsed = -1
+    last_end = -1
+    last_time = "0:00:00 / 0:00:00"
+
     # Constructor
     def __init__(self, parent, theme_manager, player):
         # Bind parent
         self.player = player
         # Call superclass constructor
-        tk.Canvas.__init__(self, parent, highlightthickness=0, height=30)
+        tk.Canvas.__init__(self, parent, highlightthickness=0, height=50)
         theme_manager.register_item("bgr", self)
         # Bind theme manager to object variable
         self.theme_manager = theme_manager
@@ -807,6 +830,8 @@ class VideoTrackbar(tk.Canvas):
         self.end_frame = 0
         # Register resize listener
         self.bind('<Configure>', self._resize)
+        # Register theme change callback
+        self.theme_manager.register_callback(self.on_theme_change)
 
     # Update the current progress bar
     def update(self, current_frame, end_frame):
@@ -818,6 +843,7 @@ class VideoTrackbar(tk.Canvas):
             self.percent = (self.current_frame / self.end_frame)
         # Call redraw function with new frames
         self.redraw()
+        self._draw_time()
 
     # Redraw the progress bar without new frames
     def redraw(self):
@@ -826,7 +852,7 @@ class VideoTrackbar(tk.Canvas):
             self._draw_pointer(0)
         else:
             # Calculate current point from percentage
-            point = self.w * self.percent
+            point = (self.w - 20) * self.percent
             self._draw_pointer(point)
 
     # Function for when the mouse is pressed down
@@ -864,26 +890,63 @@ class VideoTrackbar(tk.Canvas):
         # Delete previous elements
         self.delete("all")
         # Draw full empty bar
-        self.bar_end = self.create_rectangle(5, 12, self.w, 18, fill="blue")
-        self.bar_start = self.create_rectangle(5, 12, self.w, 18, fill="red")
+        self.bar_end = self.create_rectangle(15, 32, self.w - 10, 38)
+        self.bar_start = self.create_rectangle(15, 32, self.w - 10, 38)
         # Draw trackbar pointer
-        self.tracker_outer = self.create_oval(1, 8, 15, 22, fill="orange")
-        self.tracker_inner = self.create_oval(3, 10, 13, 20, fill="green")
+        self.tracker_outer = self.create_oval(21, 18, 35, 32)
+        self.tracker_inner = self.create_oval(23, 20, 33, 30)
+        # Draw time text
+        self.time_text = self.create_text(10, 10, text="0:00:00 / 0:00:00", anchor="w")
         # Add callback events for trackbar srolling
         self.bind("<Button-1>", self.mouse_down)
         self.bind("<ButtonRelease-1>", self.mouse_up)
         self.bind("<Motion>", self.mouse_drag)
-        # TODO: Fill based on theme
         # Redraw the progress
         self.redraw()
 
     # Function to draw the pointer at the specified location
     def _draw_pointer(self, x):
         # Draw filled portion of bar
-        self.coords(self.bar_start, 5, 12, x, 18)
+        self.coords(self.bar_start, 15, 32, x + 10, 38)
         # Draw trackbar pointer
-        self.coords(self.tracker_outer, x - 7, 8, x + 7, 22)
-        self.coords(self.tracker_inner, x - 5, 10, x + 5, 20)
+        self.coords(self.tracker_outer, x + 3, 28, x + 17, 42)
+        self.coords(self.tracker_inner, x + 5, 30, x + 15, 40)
+
+    # Function to draw the time progress on the video
+    def _draw_time(self):
+        # Draw black if video has no source and return
+        if (self.player.source_input is None):
+            # Draw no time default
+            if (not self.last_time == "0:00:00 / 0:00:00"):
+                self.itemconfig(self.time_text(text="0:00:00 / 0:00:00"))
+                self.last_time = "0:00:00 / 0:00:00"
+        else:
+            # Get video FPS
+            fps = self.player.source_input.frames_fps
+            #print(str(self.current_frame))
+            elapsed = math.floor(self.current_frame / fps)
+            total = math.floor(self.end_frame / fps)
+            # Check if elapsed and total match the last time
+            if (elapsed == self.last_elapsed and total == self.last_end):
+                return
+            # Update to new time
+            self.last_elapsed = elapsed
+            self.last_end = total
+            # Convert seconds to displayable time
+            self.last_time = str(datetime.timedelta(seconds=elapsed)) + " / " + str(datetime.timedelta(seconds=total))
+            # Draw the time string
+            self.itemconfig(self.time_text, text=self.last_time)
+    
+    # Callback function for when the theme has been changed
+    def on_theme_change(self, theme):
+        # Update bar colours
+        self.itemconfig(self.bar_end, fill=theme.hover())
+        self.itemconfig(self.bar_start, fill=theme.text())
+        # Update pointer colours
+        self.itemconfig(self.tracker_outer, fill=theme.background())
+        self.itemconfig(self.tracker_inner, fill=theme.container())
+        # Update time text colour
+        self.itemconfig(self.time_text, fill=theme.text())
 
 # - APP ITEMS
 class AppToolbar(tk.Frame):
