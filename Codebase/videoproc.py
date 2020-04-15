@@ -61,6 +61,9 @@ def processVideo(videoSource, doSaveVid, outputLocation):
         
         fileName = split[-1].split('.')[0]    
 
+        if outputLocation == "No Valid File Path Detected":
+            outputLocation = "C:/mousehub_output"
+
         #Create cv2 VideoWriter object to output bounded video
         out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
         print(outputLocation + "/" + fileName + '-bounded.mp4')
