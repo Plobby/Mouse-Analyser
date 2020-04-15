@@ -27,8 +27,6 @@ def processVideo(videoSource, doSaveVid, outputLocation):
 
     #Step through frames of video
     while video.isOpened():
-        startTime = time.time()
-
         #Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
         #Set default bounding box in case no bounding box is ever found
@@ -56,20 +54,20 @@ def processVideo(videoSource, doSaveVid, outputLocation):
     #Initialise variables and VideoWriter object needed to save videos if doSaveVid flag is true
     if doSaveVid:
         #Split videoSource string to find parent folder (source) and file name
-        try:
+        if '/' in videoSource:
             split = videoSource.split('/')
-            fileName = split[-1].split('.')[0]
-        except:
-            try:
-                split = videoSource.split('\\')
-                fileName = split[-1].split('.')[0]
-            except:
-                fileName = 'untitled'
+        elif '\\' in videoSource:
+            split = videoSource.split('\\')
+        
+        fileName = split[-1].split('.')[0]    
 
         #Create cv2 VideoWriter object to output bounded video
-        out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
-
-        print(outputLocation + "/" + fileName + '-bounded.mp4')
+        if '/' in outputLocation:
+            out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+            print(outputLocation + "/" + fileName + '-bounded.mp4')
+        elif '\\' in outputLocation:
+            out = cv2.VideoWriter(outputLocation + "\\" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+            print(outputLocation + "\\" + fileName + '-bounded.mp4')
 
     #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
     mouseData = []

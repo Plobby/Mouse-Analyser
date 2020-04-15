@@ -100,6 +100,7 @@ class VideoPage(tk.Frame):
 
     # Constructor
     def __init__(self, parent):
+        self.mouseData = []
         # Call superclass function
         tk.Frame.__init__(self, parent)
         parent.app.theme_manager.register_item("bgr", self)
@@ -145,6 +146,7 @@ class VideoPage(tk.Frame):
 
     # Function to process the user selected videos
     def process_videos(self):
+        #Get videos from video_queue
         videos = self.video_queue.get_videos()
         filecheck = videos[0].file
         self.video_player.set_source(videos[0])
@@ -154,8 +156,10 @@ class VideoPage(tk.Frame):
         outputLocation = self.config.get("General", "outputPath")
         generateBoundedVideo =  True if self.config.get("Video", "generate_video") == "1" else False
         
-        videoproc.processVideo(filecheck, doSaveVid=generateBoundedVideo, outputLocation=outputLocation)
-
+        #Process all videos and append output to mouseData
+        for video in videos:
+            self.mouseData.append(videoproc.processVideo(video.file, doSaveVid=generateBoundedVideo, outputLocation=outputLocation))
+        
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Set theme manager
