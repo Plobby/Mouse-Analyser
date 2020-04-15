@@ -13,6 +13,8 @@ import subprocess
 import os
 import cv2 as cv2
 import time
+import math
+import datetime
 from threading import Timer
 from queue import Queue, Empty
 import videoproc
@@ -126,19 +128,17 @@ class VideoPage(tk.Frame):
         IconButton(queue_buttons_frame, button_add, self.import_videos, parent.app.theme_manager).grid(row=0, column=0, padx=4, pady=4)
         IconButton(queue_buttons_frame, button_clear, self.clear_videos, parent.app.theme_manager).grid(row=0, column=1, padx=4, pady=4)
         IconButton(queue_buttons_frame, button_process, self.process_videos, parent.app.theme_manager).grid(row=0, column=2, padx=4, pady=4)
-        # Queue items list
-        self.video_queue = VideoQueue(queue_container, parent.app.theme_manager)
-        self.video_queue.grid(row=1, column=0, sticky="nesw")
         # Video player
         self.video_player = VideoPlayer(self, parent.app.theme_manager)
         self.video_player.grid(row=0, column=1, padx=(4, 0), sticky="nesw")
+        # Queue items list
+        self.video_queue = VideoQueue(queue_container, parent.app.theme_manager, self.video_player)
+        self.video_queue.grid(row=1, column=0, sticky="nesw")
 
     # Function to allow the user to select and import videos
     def import_videos(self):
         videos = iomanager.get_videos(True)
         self.video_queue.add_videos(videos)
-        if (len(videos) > 0):
-            self.video_player.set_source(videos[0])
 
     # Function to clear the user selected videos
     def clear_videos(self):
@@ -148,8 +148,9 @@ class VideoPage(tk.Frame):
     def process_videos(self):
         #Get videos from video_queue
         videos = self.video_queue.get_videos()
-
-        #Get settings for videoproc from config.ini
+        filecheck = videos[0].file
+        self.video_player.set_source(videos[0])
+        self.video_player.play()
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         outputLocation = self.config.get("General", "outputPath")
@@ -537,11 +538,16 @@ class VideoQueue(tk.Frame):
     videos = []
     theme_manager = None
 
+    boxes = []
+    text = []
+
     render_height = 100
     render_spacing = 4
 
     # Constructor
-    def __init__(self, parent, theme_manager):
+    def __init__(self, parent, theme_manager, player):
+        # Bind video player
+        self.player = player
         # Get maximum buffer size
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
@@ -566,6 +572,30 @@ class VideoQueue(tk.Frame):
         self.scrollitems.config(yscrollcommand=self.scrollbar.set)
         # Bind self theme manager
         self.theme_manager = theme_manager
+        # Register update event
+        self.theme_manager.register_callback(self.on_theme_change)
+        # Register mouse click events
+        self.scrollitems.bind("<Button-1>", self.mouse_down)
+    
+    def mouse_down(self, event):
+        # Return if no videos are present
+        if (len(self.videos) <= 0):
+            return
+        # Get position accounting for scroll offset
+        canvas = event.widget
+        x = canvas.canvasx(event.x)
+        y = canvas.canvasy(event.y)
+        # Attempt to find the clicked element and map to a video
+        video_count = 0
+        for box in self.boxes:
+            x1, y1, x2, y2 = canvas.bbox(box)
+            if (x1 <= x and x <= x2 and y1 <= y and y <= y2):
+                # Get the player and set the video source
+                video = self.videos[video_count].file
+                self.player.set_source(video)
+                break
+            else:
+                video_count += 1
 
     # Function to add multiple videos
     def add_videos(self, videos):
@@ -575,9 +605,16 @@ class VideoQueue(tk.Frame):
 
     # Function to add a video
     def add_video(self, video):
+        # Check if the video is already contained
+        for v in self.videos:
+            if (v.file == video):
+                return
         # Add video to the array
         video_input = iomanager.VideoInput(video, self.buffer_size)
         self.videos.append(video_input)
+        # Check if the video is the first video - if so, set as the playing content
+        if (len(self.videos) == 1):
+            self.player.set_source(video)
         # Get videos count
         count = len(self.videos)
         # Create video render
@@ -585,10 +622,13 @@ class VideoQueue(tk.Frame):
         if (count > 1):
             y1 += (count - 1) * 4
         # Render draw box
-        self.scrollitems.create_rectangle(0, y1, self.scrollitems.winfo_width(), y1 + 100, fill=self.theme_manager.current_theme._cntrcolor, outline="")
+        box_id = self.scrollitems.create_rectangle(0, y1, self.scrollitems.winfo_width(), y1 + 100, fill=self.theme_manager.current_theme.container(), outline="")
+        self.boxes.append(box_id)
         # Render video text
-        self.scrollitems.create_text(10, y1 + 10, fill=self.theme_manager.current_theme._txtcolor, text="Video: " + video, anchor="w")
-        self.scrollitems.create_text(10, y1 + 24, fill=self.theme_manager.current_theme._txtcolor, text="Length: " + video_input.video_length_str, anchor="w")
+        video_text = self.scrollitems.create_text(10, y1 + 10, fill=self.theme_manager.current_theme.text(), text="Video: " + video, anchor="w")
+        self.text.append(video_text)
+        video_length = self.scrollitems.create_text(10, y1 + 24, fill=self.theme_manager.current_theme.text(), text="Length: " + video_input.video_length_str, anchor="w")
+        self.text.append(video_length)
         # Configure scroll item height
         self.scrollitems.config(scrollregion=(0, 0, 0, (count * (self.render_height + self.render_spacing)) - self.render_spacing))
 
@@ -600,14 +640,25 @@ class VideoQueue(tk.Frame):
 
     # Function to clear the videos
     def clear_videos(self):
-        # Clear array
+        # Clear arrays
         self.videos = []
+        self.boxes = []
+        self.text = []
         # Clear the video render drawings
         self.scrollitems.delete("all")
 
     # Function to get the videos
     def get_videos(self):
         return self.videos
+
+    # Callback function for when the theme has been changed
+    def on_theme_change(self, theme):
+        # Update box colours
+        for box in self.boxes:
+            self.scrollitems.itemconfig(box, fill=theme.container())
+        # Update text colours
+        for txt in self.text:
+            self.scrollitems.itemconfig(txt, fill=theme.text())
 
 class VideoPlayer(tk.Frame):
     # Variables
@@ -630,6 +681,7 @@ class VideoPlayer(tk.Frame):
     buffer = None
 
     drawn = 0
+    first_rendered = False
 
     # Constructor
     def __init__(self, parent, theme_manager):
@@ -638,7 +690,7 @@ class VideoPlayer(tk.Frame):
         self.config.read("config.ini")
         self.buffer_size = int(self.config.get("Video", "Buffer_Size"))
         # Create read buffer
-        self.buffer = Queue(maxsize=self.buffer_size)
+        self.buffer = Queue(maxsize=self.buffer_size + 1)
         # Load images
         self.play_image = ImageTk.PhotoImage(file="../Assets/ButtonPlay.png")
         self.play_image_hover = ImageTk.PhotoImage(file="../Assets/ButtonPlayHover.png")
@@ -693,18 +745,43 @@ class VideoPlayer(tk.Frame):
 
     # Function to set the video source
     def set_source(self, video):
+        # Return if already the same source
+        if (video == self.source):
+            return
+        # Stop playing if the player is
+        if (self.playing):
+            self.stop()
+        # Update to new source
         self.source = video
+        self.source_input = iomanager.VideoInput(self.source, self.buffer_size)
+        # Clear any buffered frames
+        with self.buffer.mutex:
+            self.buffer.queue.clear()
+        # Show the first frame of the new source
+        self.first_rendered = False
+        self.first_frame()
 
-    # Function to clear the video source
-    def clear_source(self):
-        self.source = None
-        self.source_input.close()
-        self.source_input = None
+    def first_frame(self):
+        # Check a source is present
+        if (not self.source is None and not self.source_input is None):
+            # Check if the first frame has already been rendered
+            if (self.first_rendered):
+                return
+            # Render the first frame
+            self.source_input.start(self.buffer)
+            # Wait a small delay to read frame
+            time.sleep(0.2)
+            # Stop filling buffer
+            self.source_input.stop()
+            # Draw frame
+            self._draw_first_frame(self.buffer)
+            # Mark as first frame drawn
+            self.first_rendered = True
 
     # Function to toggle the video playing state
     def toggle(self):
         # Check a source is present
-        if (not self.source is None):
+        if (not self.source is None and not self.source_input is None):
             # Check if playing
             if (self.playing):
                 # Stop playing
@@ -720,12 +797,9 @@ class VideoPlayer(tk.Frame):
     # Function to play the video
     def play(self):
         # Check a source is present
-        if (not self.source is None):
+        if (not self.source is None and not self.source_input is None):
             # Mark as playing
             self.playing = True
-            # Create input stream
-            if (self.source_input is None):
-                self.source_input = iomanager.VideoInput(self.source)
             # Start reading frames
             self.source_input.start(self.buffer)
             # Run timer to play frames
@@ -737,6 +811,7 @@ class VideoPlayer(tk.Frame):
     def pause(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
+            # Update flags
             self.playing = False
             self.source_input.stop()
 
@@ -744,15 +819,40 @@ class VideoPlayer(tk.Frame):
     def stop(self):
         # Check a source is present
         if (not self.source is None and not self.source_input is None):
+            # Update flags
             self.playing = False
+            self.source_input.close()
             self.source = None
             self.source_input = None
+            # Reset drawn frame count
+            self.drawn = 0
 
     def start_time_change(self):
         print("Start time change")
 
     def end_time_change(self):
         print("End time change")
+
+    def _draw_first_frame(self, target):
+        # Get the first frame
+        try:
+            # Get the frame
+            frame = target.get(block=False)
+            # Process the frame and resize correctly
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = Image.fromarray(frame)
+            frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
+            frame = ImageTk.PhotoImage(image=frame)
+            # Draw the image
+            self.canvas.create_image(self.width/2, self.height/2, image=frame, anchor=tk.CENTER)
+            self.frame = frame
+            # Increment drawn count
+            self.drawn += 1
+            # Update trackbar progress
+            self.controls_trackbar.update(self.drawn, self.source_input.frames_total)
+        except:
+            # Return - no frame found
+            return
 
     # Function to draw a frame
     def _draw_frame(self, target):
@@ -769,7 +869,6 @@ class VideoPlayer(tk.Frame):
             frame = target.get(block=False)
             # Process the frame and resize correctly
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            #cv2.putText(frame, "Queue Size: {}".format(target.qsize()), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             frame = Image.fromarray(frame)
             frame.thumbnail((self.width, self.height), Image.ANTIALIAS)
             frame = ImageTk.PhotoImage(image=frame)
@@ -797,12 +896,16 @@ class VideoTrackbar(tk.Canvas):
     percent = 0
     mousedown = False
 
+    last_elapsed = -1
+    last_end = -1
+    last_time = "0:00:00 / 0:00:00"
+
     # Constructor
     def __init__(self, parent, theme_manager, player):
         # Bind parent
         self.player = player
         # Call superclass constructor
-        tk.Canvas.__init__(self, parent, highlightthickness=0, height=30)
+        tk.Canvas.__init__(self, parent, highlightthickness=0, height=50)
         theme_manager.register_item("bgr", self)
         # Bind theme manager to object variable
         self.theme_manager = theme_manager
@@ -811,6 +914,8 @@ class VideoTrackbar(tk.Canvas):
         self.end_frame = 0
         # Register resize listener
         self.bind('<Configure>', self._resize)
+        # Register theme change callback
+        self.theme_manager.register_callback(self.on_theme_change)
 
     # Update the current progress bar
     def update(self, current_frame, end_frame):
@@ -822,6 +927,7 @@ class VideoTrackbar(tk.Canvas):
             self.percent = (self.current_frame / self.end_frame)
         # Call redraw function with new frames
         self.redraw()
+        self._draw_time()
 
     # Redraw the progress bar without new frames
     def redraw(self):
@@ -830,7 +936,7 @@ class VideoTrackbar(tk.Canvas):
             self._draw_pointer(0)
         else:
             # Calculate current point from percentage
-            point = self.w * self.percent
+            point = (self.w - 20) * self.percent
             self._draw_pointer(point)
 
     # Function for when the mouse is pressed down
@@ -868,26 +974,63 @@ class VideoTrackbar(tk.Canvas):
         # Delete previous elements
         self.delete("all")
         # Draw full empty bar
-        self.bar_end = self.create_rectangle(5, 12, self.w, 18, fill="blue")
-        self.bar_start = self.create_rectangle(5, 12, self.w, 18, fill="red")
+        self.bar_end = self.create_rectangle(15, 32, self.w - 10, 38)
+        self.bar_start = self.create_rectangle(15, 32, self.w - 10, 38)
         # Draw trackbar pointer
-        self.tracker_outer = self.create_oval(1, 8, 15, 22, fill="orange")
-        self.tracker_inner = self.create_oval(3, 10, 13, 20, fill="green")
+        self.tracker_outer = self.create_oval(21, 18, 35, 32)
+        self.tracker_inner = self.create_oval(23, 20, 33, 30)
+        # Draw time text
+        self.time_text = self.create_text(10, 10, text="0:00:00 / 0:00:00", anchor="w")
         # Add callback events for trackbar srolling
         self.bind("<Button-1>", self.mouse_down)
         self.bind("<ButtonRelease-1>", self.mouse_up)
         self.bind("<Motion>", self.mouse_drag)
-        # TODO: Fill based on theme
         # Redraw the progress
         self.redraw()
 
     # Function to draw the pointer at the specified location
     def _draw_pointer(self, x):
         # Draw filled portion of bar
-        self.coords(self.bar_start, 5, 12, x, 18)
+        self.coords(self.bar_start, 15, 32, x + 10, 38)
         # Draw trackbar pointer
-        self.coords(self.tracker_outer, x - 7, 8, x + 7, 22)
-        self.coords(self.tracker_inner, x - 5, 10, x + 5, 20)
+        self.coords(self.tracker_outer, x + 3, 28, x + 17, 42)
+        self.coords(self.tracker_inner, x + 5, 30, x + 15, 40)
+
+    # Function to draw the time progress on the video
+    def _draw_time(self):
+        # Draw black if video has no source and return
+        if (self.player.source_input is None):
+            # Draw no time default
+            if (not self.last_time == "0:00:00 / 0:00:00"):
+                self.itemconfig(self.time_text(text="0:00:00 / 0:00:00"))
+                self.last_time = "0:00:00 / 0:00:00"
+        else:
+            # Get video FPS
+            fps = self.player.source_input.frames_fps
+            #print(str(self.current_frame))
+            elapsed = math.floor(self.current_frame / fps)
+            total = math.floor(self.end_frame / fps)
+            # Check if elapsed and total match the last time
+            if (elapsed == self.last_elapsed and total == self.last_end):
+                return
+            # Update to new time
+            self.last_elapsed = elapsed
+            self.last_end = total
+            # Convert seconds to displayable time
+            self.last_time = str(datetime.timedelta(seconds=elapsed)) + " / " + str(datetime.timedelta(seconds=total))
+            # Draw the time string
+            self.itemconfig(self.time_text, text=self.last_time)
+    
+    # Callback function for when the theme has been changed
+    def on_theme_change(self, theme):
+        # Update bar colours
+        self.itemconfig(self.bar_end, fill=theme.hover())
+        self.itemconfig(self.bar_start, fill=theme.text())
+        # Update pointer colours
+        self.itemconfig(self.tracker_outer, fill=theme.background())
+        self.itemconfig(self.tracker_inner, fill=theme.container())
+        # Update time text colour
+        self.itemconfig(self.time_text, fill=theme.text())
 
 # - APP ITEMS
 class AppToolbar(tk.Frame):
