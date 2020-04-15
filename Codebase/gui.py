@@ -97,6 +97,8 @@ class App(tk.Tk):
 class VideoPage(tk.Frame):
     # Variables
     video_queue = None
+    process_index = 0
+    process_total = 0
 
     # Constructor
     def __init__(self, parent):
@@ -162,16 +164,19 @@ class VideoPage(tk.Frame):
     # Private function to process videos on a separate thread
     def _process_videos(self, videos, generate_bounded_video, output_location):
         # Counter for video being processed
-        processing = 1
-        total = len(videos)
+        self.processing_index = 1
+        self.processing_total = len(videos)
         # Process all videos and append output to mouseData
         for video in videos:
-            # Set processing status
-            self.parent.status_bar.set_status("Processing video " + str(processing) + " of " + str(total))
             # Start processing video
-            self.mouseData.append(videoproc.processVideo(video.file, doSaveVid=generate_bounded_video, outputLocation=output_location))
+            self.mouseData.append(videoproc.processVideo(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
-            processing += 1
+            self.processing_index += 1
+        self.parent.status_bar.set_status("Ready to process.")
+    
+    def _progress_update(self, percentage):
+        # Set processing status
+        self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total) + " (" + "{:.1f}".format(percentage) + "%)")
            
 class DataPage(tk.Frame):
     def __init__(self, parent):

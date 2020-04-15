@@ -8,7 +8,7 @@ import time
 """Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
-def processVideo(videoSource, doSaveVid, outputLocation):
+def processVideo(videoSource, doSaveVid, outputLocation, func):
     #Dictionary containing bounding box locations for each frame (key = frame position)
     frameBoundingBoxes = {}
     #List of unprocessed frames, by frame position in video
@@ -19,6 +19,9 @@ def processVideo(videoSource, doSaveVid, outputLocation):
     #Open the video stored at videoSource
     video = cv2.VideoCapture(videoSource)
 
+    # Get total frames of video
+    frameTotal = video.get(cv2.CAP_PROP_FRAME_COUNT)
+
     #Get first frame of video
     ret, frame = video.read()
     #Calculate threshold if a frame is returned (ret == true)
@@ -27,8 +30,11 @@ def processVideo(videoSource, doSaveVid, outputLocation):
 
     #Step through frames of video
     while video.isOpened():
-        #Get frame number for current frame
+        # Get frame number for current frame
         framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
+        # Calculate percentage of processing done
+        percentage = (framePos / frameTotal) * 100
+        func(percentage)
         #Set default bounding box in case no bounding box is ever found
         frameBoundingBoxes[framePos] = [0, 0, 0, 0]
         #Calculate bounding box size for mouse in frame
