@@ -177,7 +177,7 @@ class VideoPage(tk.Frame):
         # Process all videos and append output to mouseData
         for video in videos:
             # Start processing video
-            self.mouseData.append(videoproc.processVideo(video.file, generate_bounded_video, output_location, self._progress_update))
+            self.mouseData.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
             self.processing_index += 1
         self.parent.status_bar.set_status("Ready to process.")
