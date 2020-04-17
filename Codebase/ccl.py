@@ -23,7 +23,7 @@ def CCL(inpFrame):
     while True:
         #Find an unexplored pixel (this indicates a new object in the frame)
         searchPixel = findNewObject(inpFrame, labelled, pixelSearchOffset)
-
+        
         #Break while loop if no new pixel is found
         if searchPixel[0] == None: 
             break   
@@ -84,11 +84,9 @@ def exploreObject(inpFrame, startPixel):
     queue = deque()
     #Enqueue startPixel to queue
     queue.append(startPixel)
-
     while len(queue) > 0:
         #Deque pixel
         pixel = queue.popleft()
-
         if pixel not in newObjectCoords:
             #Add pixel to newObjectCoords
             newObjectCoords.append(pixel)
