@@ -71,8 +71,8 @@ def thresholdSegment(inpFrame, threshold):
     yRange = range(int(inpFrame.shape[1] * borderPercentY), int(inpFrame.shape[1] - (inpFrame.shape[1] * borderPercentX)))
     
     #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
-    for x, _ in enumerate(xRange):
-        for y, __ in enumerate(yRange):
+    for _, x in enumerate(xRange):
+        for __, y in enumerate(yRange):
             if inpFrame[x, y] < threshold:
                 frame[x, y] = 255
             else:
