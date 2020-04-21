@@ -95,6 +95,9 @@ class dataGraph():
             highestValues = barValues[0]
             rotator = 0
 
+            # A little double for loop for creating a list of the highest values for each bar.
+            # This is necessary because of the awkward way tkinter deals with stacked bar charts.
+
             for barList in barValues:
                 for item in barList:
                     if item > highestValues[rotator]:
@@ -111,6 +114,9 @@ class dataGraph():
                 use = plt.bar(xValues,barValues[stackValue+1], bottom = highestValues)
                 useList.append(use)
                 stackValue += 1
+
+            #print(useList)
+            #print(positionMeaning)
 
             plt.legend(useList,positionMeaning)
 
@@ -132,7 +138,13 @@ class dataGraph():
     def createPositionChart(self,f,coordsXY,vidSizeX,vidSizeY):
         innerPlot = f.add_subplot(1,1,1)
 
-        plt.plot(coordsXY[0], coordsXY[1])
+        realCoords = [[],[]]
+
+        for item in coordsXY:
+            realCoords[0].append(item[0])
+            realCoords[1].append(item[1])
+
+        plt.plot(realCoords[0], realCoords[1])
 
         axes = plt.gca()
         axes.set_xlim([0,vidSizeX]) # Create fixed size axis for my
@@ -140,7 +152,13 @@ class dataGraph():
 
         return f, innerPlot
 
-    def estimatePosesDefault(self,xSizes,ySizes,coordsXY,vidSizeX,vidSizeY):
+    def estimatePosesDefault(self,xSizes,ySizes,enteredCoords,vidSizeX,vidSizeY):
+
+        coordsXY = [[],[]]
+
+        for item in enteredCoords:
+            coordsXY[0].append(item[0])
+            coordsXY[1].append(item[1])
 
         positionList = [] # Used to contain the positions eventually.
         positionMeaning = {"Undefined":0,"Eating":1,"Moving":2,"Hanging":3,"Sleeping":4} # Used to store the relevant meaning of each integer in the final list.
@@ -150,11 +168,11 @@ class dataGraph():
         timeToSleep = 1200
         # Relevant because it takes 1200 frames (40 seconds) for a mouse to be classsed as asleep
 
-        while sizeRotate < xSizes.len(): # While the current frame is less than the frames in the x list... (Loop through the frames once)
+        while sizeRotate < len(xSizes): # While the current frame is less than the frames in the x list... (Loop through the frames once)
 
             if xSizes[sizeRotate]*2 < ySizes[sizeRotate]: # If the mouse is more than twice as long as tall...
                 positionList.append(1)
-            elif abs(coordsXY[0][sizeRotate-20] - coords[0][sizeRotate]) >= 20 and abs(coordsXY[1][sizeRotate-20] - coords[1][20]) >= 20:
+            elif abs(coordsXY[0][sizeRotate-20] - coordsXY[0][sizeRotate]) >= 20 and abs(coordsXY[1][sizeRotate-20] - coordsXY[1][sizeRotate]) >= 20:
                 # If the centre of the mouse is moving more than 20 pixels every 20 frames (1px/frame), then it is moving.
                 positionList.append(2)
             elif coordsXY[1][sizeRotate] > vidSizeY/2:
@@ -192,7 +210,10 @@ if __name__ == "__main__":
     "Undefined":3}
     mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
-    newGraph, myPlot = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
+    coordsXY = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
+
+    #newGraph, myPlot = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
+    newgraph, myPlot = gen.createPositionChart(newGraph, coordsXY, 640, 480)
 
     plt.show()
     input()
