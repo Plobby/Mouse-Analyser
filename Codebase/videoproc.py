@@ -33,6 +33,7 @@ def processVideo(videoSource, doSaveVid, outputLocation, func):
     #Calculate threshold if a frame is returned (ret == true)
     if ret:
         videoThreshold = seg.otsuThreshold(frame)
+    counter = 0
 
     #Step through frames of video
     while video.isOpened():
@@ -56,6 +57,8 @@ def processVideo(videoSource, doSaveVid, outputLocation, func):
             #Add current frame's bounding box to frameBoundingBoxes
             frameBoundingBoxes[framePos] = boundingBox
 
+        print("Processed frame: " + str(counter))
+        counter += 1
         #Get next frame of video and a flag indicating if there is a frame available
         ret, frame = video.read()
 
@@ -130,7 +133,7 @@ def processVideo(videoSource, doSaveVid, outputLocation, func):
 
 def process_video(video_source, save, output_location, func):
     # Process count variable
-    process_percent = 0.5
+    process_percent = 0.25
     process_count = int(mp.cpu_count() * process_percent)
     # Create new list for queue buffers
     process_queues = []
