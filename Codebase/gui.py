@@ -97,6 +97,8 @@ class App(tk.Tk):
 class VideoPage(tk.Frame):
     # Variables
     video_queue = None
+    process_index = 0
+    process_total = 0
 
     # Constructor
     def __init__(self, parent):
@@ -144,7 +146,15 @@ class VideoPage(tk.Frame):
 
     # Function to clear the user selected videos
     def clear_videos(self):
+        # Remove all videos from queue
         self.video_queue.clear_videos()
+        # Check if the player is playing
+        if (self.video_player.playing):
+            self.video_player.stop()
+        # Delete all from video player canvas
+        self.video_player.canvas.delete("all")
+        self.video_player.frame = None
+        self.video_player.controls_trackbar.reset()
 
     # Function to process the user selected videos
     def process_videos(self):
@@ -162,16 +172,20 @@ class VideoPage(tk.Frame):
     # Private function to process videos on a separate thread
     def _process_videos(self, videos, generate_bounded_video, output_location):
         # Counter for video being processed
-        processing = 1
-        total = len(videos)
+        self.processing_index = 1
+        self.processing_total = len(videos)
         # Process all videos and append output to mouseData
         for video in videos:
-            # Set processing status
-            self.parent.status_bar.set_status("Processing video " + str(processing) + " of " + str(total))
             # Start processing video
-            self.mouseData.append(videoproc.processVideo(video.file, doSaveVid=generate_bounded_video, outputLocation=output_location))
+            self.mouseData.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
-            processing += 1
+            self.processing_index += 1
+        self.parent.status_bar.set_status("Ready to process.")
+    
+    # Function to update the progress of the tracker
+    def _progress_update(self, percentage):
+        # Set processing status
+        self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total) + " (" + "{:.1f}".format(percentage) + "%)")
            
 class DataPage(tk.Frame):
     def __init__(self, parent):
@@ -929,6 +943,16 @@ class VideoTrackbar(tk.Canvas):
         # Register theme change callback
         self.theme_manager.register_callback(self.on_theme_change)
 
+    # Function to reset the trackbar to default
+    def reset(self):
+        # Update variables
+        self.current_frame = 0
+        self.end_frame = 0
+        self.percent = 0
+        # Call redraw functions with new frames
+        self.redraw()
+        self._draw_time()
+
     # Update the current progress bar
     def update(self, current_frame, end_frame):
         # Update variables
@@ -937,7 +961,7 @@ class VideoTrackbar(tk.Canvas):
         # Calculate percentage completion from frames
         if (self.current_frame >= 0 and self.end_frame > 0):
             self.percent = (self.current_frame / self.end_frame)
-        # Call redraw function with new frames
+        # Call redraw functions with new frames
         self.redraw()
         self._draw_time()
 
