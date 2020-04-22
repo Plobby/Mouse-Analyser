@@ -95,7 +95,9 @@ class DataGraph():
         print(file_location)
         file_location = file_location.strip("\n")
 
-        log_file = open(file_location+"mousehub_data.log", "a+")
+        log_file = open(file_location+"/mousehub_data.log", "a+")
+
+        print("Log file appended!")
 
         log_file.write("START OF FILE\n")
 
