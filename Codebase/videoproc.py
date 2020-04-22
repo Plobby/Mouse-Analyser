@@ -225,7 +225,6 @@ def process_video(video_source, save, output_location, func):
             for y in range(box[2], box[3] + 1):
                 frame[box[0], y] = [255, 0, 0]
                 frame[box[1], y] = [255, 0, 0]
-
         else:
             break
         

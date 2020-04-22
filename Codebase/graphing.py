@@ -13,7 +13,6 @@ import cli
 import sys
 
 def Translate(timeInWords): # Needs string input of time in english words, standard grammar, no full stop.
-    #timeInWords += " " # Add a space to allow for easy final word detection.
     words = [] # Storage for words.
     totalTime = 0 # Storage for total time conversion, in ns.
     timeConversion = {"SECONDS" : 1, "SECOND" : 1, "MINUTES" : 60, "MINUTE" : 60, "HOURS" : 3600,  "HOUR" : 3600, "DAY" : 86400, "DAYS" : 86400}
@@ -27,19 +26,13 @@ def Translate(timeInWords): # Needs string input of time in english words, stand
 
     return totalTime
 
-class dataGraph():
+class DataGraph():
     def __init__(self):
-        self._xList = []
-        self._yList = []
+        self._x_list = []
+        self._y_list = []
 
-    def createBasicBarChart(self,f,barNames,barHeights): # If the barheights are already calculated.
-        innerPlot = f.add_subplot(1,1,1)
-
-        plt.bar(barNames,barHeights,align = 'center')
-
-        return f, innerPlot
-
-    def createStackedBarChart(self,f,timeGapPerReportedPosition,timePeriodPerBar,positionMeaning,positionList):
+    # Function to create a stacked bar chart
+    def create_stacked_bar_chart(self,f,timeGapPerReportedPosition,timePeriodPerBar,positionMeaning,positionList):
         innerPlot = f.add_subplot(1,1,1)
         indexDict = []
         if timePeriodPerBar > timeGapPerReportedPosition: # The time period per bar *must* be larger than the gap that the positions are reported in - else the program will break.
@@ -135,7 +128,7 @@ class dataGraph():
 
     # Bottom left is 0,0 for the pose estimation
 
-    def createPositionChart(self,f,coordsXY,vidSizeX,vidSizeY):
+    def create_position_chart(self,f,coordsXY,vidSizeX,vidSizeY):
         innerPlot = f.add_subplot(1,1,1)
 
         realCoords = [[],[]]
@@ -152,7 +145,7 @@ class dataGraph():
 
         return f, innerPlot
 
-    def estimatePosesDefault(self,xSizes,ySizes,enteredCoords,vidSizeX,vidSizeY):
+    def estimate_poses_default(self,xSizes,ySizes,enteredCoords,vidSizeX,vidSizeY):
 
         coordsXY = [[],[]]
 
@@ -195,8 +188,7 @@ class dataGraph():
 
         return positionMeaning, positionList
 
-
-
+"""
 if __name__ == "__main__":
     jeff = Translate("4 days 3 Hours 23 Minutes 33 Seconds")
     print("Total Time in seconds: "+ str(jeff))
@@ -211,9 +203,8 @@ if __name__ == "__main__":
     mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
     coordsXY = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
-
-    #newGraph, myPlot = gen.createStackedBarChart(newGraph,1,5,xLabels,mouseReport)
     newgraph, myPlot = gen.createPositionChart(newGraph, coordsXY, 640, 480)
 
     plt.show()
     input()
+"""

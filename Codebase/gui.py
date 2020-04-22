@@ -40,7 +40,7 @@ class App(tk.Tk):
     settings_page = None
     status_bar = None
     theme_manager = None
-    mouseData = []
+    mouse_data = []
 
     # Constructor
     def __init__(self, *args, **kwargs):
@@ -177,8 +177,10 @@ class VideoPage(tk.Frame):
         self.processing_total = len(videos)
         # Process all videos and append output to mouseData
         for video in videos:
+            # Update status
+            self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total))
             # Start processing video
-            self.parent.mouseData.append(videoproc.processVideo(video.file, generate_bounded_video, output_location, self._progress_update))
+            self.parent.mouseData.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
             self.processing_index += 1
         self.parent.status_bar.set_status("Ready to process.")
@@ -193,194 +195,178 @@ class DataPage(tk.Frame):
         # Set theme manager
         self.theme_manager = parent.app.theme_manager
 
-        print(parent.app.mouseData) # The mouse data from processing!
-
-        mousePos = []
-        mouseWidth = []
-        mouseHeight = []
-
         # Call superclass function
         tk.Frame.__init__(self, parent)
         self.grid(row=0, column=0, sticky="nesw")
         self.theme_manager.register_item("bgr", self)
 
         # Create graph figure and generator
-        graphFigure = plt.figure() # Figure for graphing.
-        graphGenerator = graph.dataGraph() # object to store datagraph in.
+        graph_figure = plt.figure() # Figure for graphing.
+        graph_generator = graph.DataGraph() # object to store datagraph in.
 
-        # Warning labels! Should dissapear if not needed - aka if a video's been processed.
+        # Create warning label
+        self.warning_label = tk.Label(self, text = "Warning!", font = ("Rockwell",25))
+        self.theme_manager.register_item("bgr", self.warning_label)
+        self.theme_manager.register_item("txt", self.warning_label)
+        self.warning_label.grid(row=0, column=2, sticky='nesw',padx=10,pady=5)
 
-        self.warningLabel = tk.Label(self, text = "Warning!", font = ("Rockwell",25))
-        self.theme_manager.register_item("bgr", self.warningLabel)
-        self.theme_manager.register_item("txt", self.warningLabel)
-        self.warningLabel.grid(row=0, column=2, sticky='nesw',padx=10,pady=5)
+        # Create warning text
+        self.warning_text = tk.Label(self, text = "No videos have been processed yet!\nDisplayed data is placeholder until then.", font = ("Rockwell",15))
+        self.theme_manager.register_item("bgr", self.warning_text)
+        self.theme_manager.register_item("txt", self.warning_text)
+        self.warning_text.grid(row=1, column=2, sticky='nesw',padx=10,pady=5)
 
-        self.warningText = tk.Label(self, text = "No videos have been processed yet!\nDisplayed data is placeholder until then.", font = ("Rockwell",15))
-        self.theme_manager.register_item("bgr", self.warningText)
-        self.theme_manager.register_item("txt", self.warningText)
-        self.warningText.grid(row=1, column=2, sticky='nesw',padx=10,pady=5)
+        # Stacked bar graph button
+        stack_bar_button = tk.Button(self, text = "Actogram Equivalent", font = ("Rockwell", 15), command=lambda: self.set_graph_bar_stacked(parent.app.mouse_data, graph_generator, graph_figure, self.my_plot))
+        self.theme_manager.register_item("bgr", stack_bar_button)
+        self.theme_manager.register_item("txt", stack_bar_button)
+        stack_bar_button.grid(row=5, column=6, sticky='nesw',padx=50,pady=10)
 
-        # Graph switching buttons!
+        # Path graph button
+        path_graph_button = tk.Button(self, text = "Line Graph", font = ("Rockwell", 15), command=lambda: self.set_graph_line(parent.app.mouse_data, graph_generator, graph_figure, self.my_olot))
+        self.theme_manager.register_item("bgr", path_graph_button)
+        self.theme_manager.register_item("txt", path_graph_button)
+        path_graph_button.grid(row=6, column=6, sticky='n',padx=50,pady=10)
 
-        #barGraphButton = tk.Button(self, text = "Bar Chart", font = ("Rockwell", 15), command=lambda: self.set_graph_bar(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
-        #self.theme_manager.register_item("bgr", barGraphButton)
-        #self.theme_manager.register_item("txt", barGraphButton)
-        #barGraphButton.grid(row=4, column=6, sticky='s',padx=50,pady=10)
+        # Placeholder data
+        x_labels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
+        y_values = [50,30,120,25]
 
-        stackBarButton = tk.Button(self, text = "Actogram Equivalent", font = ("Rockwell", 15), command=lambda: self.set_graph_bar_stacked(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
-        self.theme_manager.register_item("bgr", stackBarButton)
-        self.theme_manager.register_item("txt", stackBarButton)
-        stackBarButton.grid(row=5, column=6, sticky='nesw',padx=50,pady=10)
+        big_num = 300
+        new_list = []
 
-        pathGraphButton = tk.Button(self, text = "Line Graph", font = ("Rockwell", 15), command=lambda: self.set_graph_line(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
-        self.theme_manager.register_item("bgr", pathGraphButton)
-        self.theme_manager.register_item("txt", pathGraphButton)
-        pathGraphButton.grid(row=6, column=6, sticky='n',padx=50,pady=10)
-
-
-
-        xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3} # Generate Placeholder data.
-        yValues = [50,30,120,25]
-        mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
-
-        bigNum = 300
-        newList = []
-
-        for num in range(0,bigNum):
-                if num <= bigNum/5:
-                    newList.append(0)
-                elif num >= (bigNum/5)*4:
-                    newList.append(0)
-                elif num > bigNum/5 and num < bigNum/7*2:
-                    newList.append(2)
+        # Iterate and populate with data
+        for num in range(0,big_num):
+                if num <= big_num/5:
+                    new_list.append(0)
+                elif num >= (big_num/5)*4:
+                    new_list.append(0)
+                elif num > big_num/5 and num < big_num/7*2:
+                    new_list.append(2)
                 else:
-                    newList.append(3)
+                    new_list.append(3)
 
-        xLabels2 = [5,6,7,8,5,6]
-        yValues2 = [4,5,6,7,8,3]
+        # Create list of co-ordinates
+        coords = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
 
-        coordsXY = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
-
-        self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, coordsXY, 640, 480)
+        # Create position chart and display
+        self.graph_figure, self.my_plot = graph_generator.create_position_chart(graph_figure, coords, 640, 480)
 
         # Title entry field
-        titleEntry = tk.Entry(self)
-        self.theme_manager.register_item("bgr", titleEntry)
-        self.theme_manager.register_item("txt", titleEntry)
-        titleEntry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
+        title_entry = tk.Entry(self)
+        self.theme_manager.register_item("bgr", title_entry)
+        self.theme_manager.register_item("txt", title_entry)
+        title_entry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
 
         # Set title button
-        setButton = tk.Button(self, text="Set Title", command=lambda: self.set_title(titleEntry, self.myPlot))
-        self.theme_manager.register_item("bgr", setButton)
-        self.theme_manager.register_item("txt", setButton)
-        setButton.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
+        set_button = tk.Button(self, text="Set Title", command=lambda: self.set_title(title_entry, self.myPlot))
+        self.theme_manager.register_item("bgr", set_button)
+        self.theme_manager.register_item("txt", set_button)
+        set_button.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
 
         # Register theme change callback
         self.theme_manager.register_callback(self.on_theme_change)
 
         # Create and draw canvas
-        self.canvas = FigureCanvasTkAgg(self.graphFigure, self)
+        self.canvas = FigureCanvasTkAgg(self.graph_figure, self)
         self.canvas.draw()
         # Configure in tkinter display
         self.canvas.get_tk_widget().grid(row=3, column=2, rowspan=99)
 
     def on_theme_change(self, theme):
         # Update graph figure
-        self.graphFigure.set_facecolor(theme.background())
+        self.graph_figure.set_facecolor(theme.background())
         # Update plot
-        self.myPlot.tick_params(labelcolor=theme.text(), color=theme.container())
-        self.myPlot.set_facecolor(theme.container())
+        self.my_plot.tick_params(labelcolor=theme.text(), color=theme.container())
+        self.my_plot.set_facecolor(theme.container())
         # Update plot spines
-        for spine in self.myPlot.spines.values():
+        for spine in self.my_plot.spines.values():
             spine.set_edgecolor(theme.container())
         # Update axes
-        self.myPlot.set_xlabel("Time (s)", color=theme.text())
-        self.myPlot.set_ylabel("Activity per Division", color=theme.text())
+        self.my_plot.set_xlabel("Time (s)", color=theme.text())
+        self.my_plot.set_ylabel("Activity per Division", color=theme.text())
         # Update title color
-        self.myPlot.set_title(self.myPlot.get_title(), color=theme.text())
+        self.my_plot.set_title(self.my_plot.get_title(), color=theme.text())
         # Redraw
         self.canvas.draw()
 
-    def shadow_bar_chart(self, graphFigure, graphGenerator, canvas):
-        # Code to implement graph on canvas + page
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=3, column=2, rowspan=99)
-
-    def set_title(self, titleEntry, myPlot):
+    def set_title(self, title_entry, my_plot):
         # Update title
-        myPlot.set_title(titleEntry.get(), color=self.theme_manager.get_current_theme().text())
+        my_plot.set_title(title_entry.get(), color=self.theme_manager.get_current_theme().text())
         # Redraw
         self.canvas.draw()
 
-    def set_graph_bar(self, mouseData, graphGenerator, graphFigure, myPlot):
-        print("Generating Bar Graph...")
-
-        graphFigure, myPlot = graphGenerator.createPositionChart(graphFigure, coordsXY, 640, 480)
-
+    def set_graph_bar(self, mouse_data, graph_generator, graph_figure, my_plot):
+        # Create position chart
+        graph_figure, my_plot = graph_generator.create_position_chart(graph_figure, coordsXY, 640, 480)
+        # Draw canvas
         self.canvas.draw()
 
-    def set_graph_bar_stacked(self, mouseData, graphGenerator, graphFigure, myPlot):
-        print("Generating Stacked Bar Graph...")
+    def set_graph_bar_stacked(self, mouse_data, graph_generator, graph_figure, my_plot):
+        # Check there is data to display
+        if len(mouse_data) >= 1:
+            # Clear plot
+            my_plot.clear()
+            # Remove warning labels
+            self.warning_label.grid_forget()
+            self.warning_text.grid_forget()
 
-        if len(mouseData) >= 1: # If there's any data to display...
-            positionMeaning = {}
-            positionList = []
+            # Create lists to store data
+            mouse_pos = []
+            mouse_width = []
+            mouse_height = []
 
-            myPlot.clear()
-            self.warningLabel.grid_forget()
-            self.warningText.grid_forget()
-
-            mousePos = []
-            mouseWidth = []
-            mouseHeight = []
-
-            for data in mouseData:
+            # Iterate and append all data
+            for data in mouse_data:
                 for item in data:
-                    #print("ITEM: "+ str(item))
-                    mousePos.append([item[0][0],item[0][1]])
-                    mouseWidth.append(item[1])
-                    mouseHeight.append(item[2])
+                    mouse_pos.append([item[0][0],item[0][1]])
+                    mouse_width.append(item[1])
+                    mouse_height.append(item[2])
 
-            #print(mousePos)
+            # Estimate poses and store in variables
+            position_meaning, position_list = graph_generator.estimate_poses_default(mouse_width, mouse_height, mouse_pos, 640, 480)
 
-            positionMeaning, positionList = graphGenerator.estimatePosesDefault(mouseWidth,mouseHeight,mousePos,640,480)
+            # Create bar graph and update plot and graph figure
+            self.graph_figure, self.my_plot = graph_generator.create_stacked_bar_chart(graph_figure, 0.33333333333, 5, position_meaning, position_list)
 
-            self.graphFigure, self.myPlot = graphGenerator.createStackedBarChart(graphFigure,0.33333333333,5,positionMeaning,positionList)
-
+            # Set axes labels
             self.myPlot.set_xlabel("Frames")
             self.myPlot.set_ylabel("Activity Per Time Division")
-
+            # Redraw canvas
             self.canvas.draw()
 
-    def set_graph_line(self, mouseData, graphGenerator, graphFigure, myPlot):
-        print("Generating Location trail graph")
+    def set_graph_line(self, mouse_data, graph_generator, graph_figure, my_plot):
+        # Check there is data to display
+        if len(mouse_data) >= 1:
+            # Clear preivous plot
+            my_plot.clear()
+            # Clear warning labels
+            self.warning_label.grid_forget()
+            self.warning_text.grid_forget()
 
-        if len(mouseData) >= 1: # If there's any data to display...
-            myPlot.clear()
-            self.warningLabel.grid_forget()
-            self.warningText.grid_forget()
+            # Variables to store mouse data
+            mouse_pos = []
+            mouse_width = []
+            mouse_height = []
 
-            mousePos = []
-            mouseWidth = []
-            mouseHeight = []
-
-            for data in mouseData:
+            # Iterate and append all data
+            for data in mouse_data:
                 for item in data:
-                    #print("ITEM: "+ str(item))
-                    mousePos.append([item[0][0],item[0][1]])
-                    mouseWidth.append(item[1])
-                    mouseHeight.append(item[2])
+                    mouse_pos.append([item[0][0],item[0][1]])
+                    mouse_width.append(item[1])
+                    mouse_height.append(item[2])
 
-            #print(mousePos)
+            # Generate position chart and update plot and graph figure
+            self.graph_figure, self.my_plot = graph_generator.create_position_chart(graph_figure, mouse_pos, 640, 480)
 
-            self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, mousePos, 640, 480)
-
+            # Update axes labels
             self.myPlot.set_xlabel("X Position")
             self.myPlot.set_ylabel("Y Position")
-
+            # Redraw graph
             self.canvas.draw()
 
 class SettingsPage(tk.Frame):
+    # Hashmaps to lookup values for settings
     lookup_boolean = {
         0: "1",
         1: "0"
@@ -398,6 +384,7 @@ class SettingsPage(tk.Frame):
     }
 
     def __init__(self, parent):
+        # Bind theme manager instance
         self.theme_manager = parent.app.theme_manager
 
         tk.Frame.__init__(self, parent)
@@ -408,195 +395,216 @@ class SettingsPage(tk.Frame):
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
 
-        Yes = ImageTk.PhotoImage(file="../Assets/ButtonYesGr.png")
-        No = ImageTk.PhotoImage(file="../Assets/ButtonNoRed.png")
-        Open = ImageTk.PhotoImage(file="../Assets/ButtonOpen.png")
-        self.Open = Open
-        Path = ImageTk.PhotoImage(file="../Assets/ButtonPath.png")
-        self.Path = Path
-        NoSelect = ImageTk.PhotoImage(file="../Assets/ButtonNoSelect.png")
-        Select = ImageTk.PhotoImage(file="../Assets/ButtonSelect.png")
+        # Load images for use in settings page
+        self.yes = ImageTk.PhotoImage(file="../Assets/ButtonYesGr.png")
+        self.no = ImageTk.PhotoImage(file="../Assets/ButtonNoRed.png")
+        self.open = ImageTk.PhotoImage(file="../Assets/ButtonOpen.png")
+        self.path = ImageTk.PhotoImage(file="../Assets/ButtonPath.png")
+        no_select = ImageTk.PhotoImage(file="../Assets/ButtonNoSelect.png")
+        select = ImageTk.PhotoImage(file="../Assets/ButtonSelect.png")
+
+        # Create config parser
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
-        outputLocation = self.config.get('General', 'OutputPath')
+        output_location = self.config.get('General', 'OutputPath')
+
         # Creating a frame to put all the buttons in.
         settings_frame = tk.Frame(self)
         settings_frame.grid(row=0,column=1,sticky="nesw")
         parent.app.theme_manager.register_item("bgr", settings_frame)
         self.tkvar = tk.StringVar(load)
         # General Settings
-        GeneralLabel = tk.Label(self, text="General Settings", font=("Rockwell",20))
-        parent.app.theme_manager.register_item("bgr", GeneralLabel)
-        parent.app.theme_manager.register_item("txt", GeneralLabel)
-        GeneralLabel.grid(row=0,column=0,sticky="w",pady=10,padx=10)
+        general_label = tk.Label(self, text="General Settings", font=("Rockwell",20))
+        parent.app.theme_manager.register_item("bgr", general_label)
+        parent.app.theme_manager.register_item("txt", general_label)
+        general_label.grid(row=0,column=0,sticky="w",pady=10,padx=10)
         # Change Directory / Open Output Location
-        self.OutputLocationLabel = tk.Label(self,text="Output Directory - " + outputLocation, font=("Rockwell",13))
-        parent.app.theme_manager.register_item("bgr", self.OutputLocationLabel)
-        parent.app.theme_manager.register_item("txt", self.OutputLocationLabel)
-        self.OutputLocationLabel.grid(row=1,column=0,sticky="w",padx=10)
+        self.output_location_label = tk.Label(self,text="Output Directory - " + output_location, font=("Rockwell",13))
+        parent.app.theme_manager.register_item("bgr", self.output_location_label)
+        parent.app.theme_manager.register_item("txt", self.output_location_label)
+        self.output_location_label.grid(row=1,column=0,sticky="w",padx=10)
         # Output button
-        OutputButton = tk.Button(self, command=self.SetDirectory, image=Path, compound="left", highlightthickness=0, bd=0)
-        parent.app.theme_manager.register_item("bgr", OutputButton)
-        parent.app.theme_manager.register_item("hbgr", OutputButton)
-        parent.app.theme_manager.register_item("abgr", OutputButton)
-        OutputButton.grid(row=2,column=0,sticky="w",padx=10)
+        output_button = tk.Button(self, command=self.set_directory, image=self.path, compound="left", highlightthickness=0, bd=0)
+        parent.app.theme_manager.register_item("bgr", output_button)
+        parent.app.theme_manager.register_item("hbgr", output_button)
+        parent.app.theme_manager.register_item("abgr", output_button)
+        output_button.grid(row=2,column=0,sticky="w",padx=10)
         # Open button
-        OpenButton = tk.Button(self, command=self.OpenPath, image=Open, compound="left", highlightthickness=0, bd=0)
-        parent.app.theme_manager.register_item("bgr", OpenButton)
-        parent.app.theme_manager.register_item("hbgr", OpenButton)
-        parent.app.theme_manager.register_item("abgr", OpenButton)
-        OpenButton.grid(row=2,column=0,sticky="w", padx=120)
+        open_button = tk.Button(self, command=self.open_path, image=self.open, compound="left", highlightthickness=0, bd=0)
+        parent.app.theme_manager.register_item("bgr", open_button)
+        parent.app.theme_manager.register_item("hbgr", open_button)
+        parent.app.theme_manager.register_item("abgr", open_button)
+        open_button.grid(row=2,column=0,sticky="w", padx=120)
         # Theme label
-        ThemeLabel= tk.Label(self, text="Client Theme", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", ThemeLabel)
-        parent.app.theme_manager.register_item("txt", ThemeLabel)
-        ThemeLabel.grid(row=3, column=0, sticky='w',padx=10,pady=10)
+        theme_label= tk.Label(self, text="Client Theme", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", theme_label)
+        parent.app.theme_manager.register_item("txt", theme_label)
+        theme_label.grid(row=3, column=0, sticky='w',padx=10,pady=10)
+        # Create buttons for themes
         self.ti = tk.IntVar()
-        self.TB1 = RadioButton(self,parent.app.theme_manager,"Light",NoSelect,Select,self.ThemeSave,self.ti,1)
+        self.TB1 = RadioButton(self,parent.app.theme_manager,"Light",no_select,select,self.theme_save,self.ti,1)
         self.TB1.grid(row =4, column=0, sticky='w',padx=10)
-        self.TB3 = RadioButton(self,parent.app.theme_manager,"Dark",NoSelect,Select,self.ThemeSave,self.ti,2)
+        self.TB3 = RadioButton(self,parent.app.theme_manager,"Dark",no_select,select,self.theme_save,self.ti,2)
         self.TB3.grid(row=4, column=0, sticky='w', padx=110)
-        self.TB4 = RadioButton(self,parent.app.theme_manager,"Debug",NoSelect,Select,self.ThemeSave,self.ti,3)
+        self.TB4 = RadioButton(self,parent.app.theme_manager,"Debug",no_select,select,self.theme_save,self.ti,3)
         self.TB4.grid(row=4, column=0, sticky='w', padx=210)
         # Video Settings
-        VideoLabel = tk.Label(self, text="Video Settings", font=("Rockwell",20))
-        parent.app.theme_manager.register_item("bgr", VideoLabel)
-        parent.app.theme_manager.register_item("txt", VideoLabel)
-        VideoLabel.grid(row=5,column=0,sticky="w",pady=10,padx=10)
-        # SaveVideo - Yes/No
-        SaveLabel= tk.Label(self, text="Generate Bounding Box Video File", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", SaveLabel)
-        parent.app.theme_manager.register_item("txt", SaveLabel)
-        SaveLabel.grid(row=6, column=0, sticky='w',padx=10,pady=10)
-        self.SVB = tk.IntVar()
-        self.LB1 = CheckButton(self, parent.app.theme_manager,Yes,No,self.GenerateVideo, self.SVB)
+        video_label = tk.Label(self, text="Video Settings", font=("Rockwell",20))
+        parent.app.theme_manager.register_item("bgr", video_label)
+        parent.app.theme_manager.register_item("txt", video_label)
+        video_label.grid(row=5,column=0,sticky="w",pady=10,padx=10)
+        # Save video label
+        save_label = tk.Label(self, text="Generate Bounding Box Video File", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", save_label)
+        parent.app.theme_manager.register_item("txt", save_label)
+        save_label.grid(row=6, column=0, sticky='w',padx=10,pady=10)
+        # Save video value
+        self.svb = tk.IntVar()
+        self.LB1 = CheckButton(self, parent.app.theme_manager,self.yes,self.no,self.generate_video, self.svb)
         self.LB1.grid(row=7,column=0,sticky="w",padx=10)
-        BoundingBoxLabel2 = tk.Label(self, text="Playback Buffer Size", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", BoundingBoxLabel2)
-        parent.app.theme_manager.register_item("txt", BoundingBoxLabel2)
-        BoundingBoxLabel2.grid(row=12,column=0,sticky='w',padx=10,pady=10)
+        # Playback buffer size
+        bounding_box_label = tk.Label(self, text="Playback Buffer Size", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", bounding_box_label)
+        parent.app.theme_manager.register_item("txt", bounding_box_label)
+        bounding_box_label.grid(row=12,column=0,sticky='w',padx=10,pady=10)
         # Playback Buzzer Size RadioButton
-        self.BS = tk.IntVar()
-        self.LB6 = RadioButton(self,parent.app.theme_manager,"16",NoSelect,Select,self.BufferSize,self.BS,1)
+        self.bs = tk.IntVar()
+        self.LB6 = RadioButton(self,parent.app.theme_manager,"16",no_select,select,self.buffer_size,self.bs,1)
         self.LB6.grid(row=13, column=0,sticky="w",padx=10)
-        self.LB7 = RadioButton(self,parent.app.theme_manager,"32",NoSelect,Select,self.BufferSize,self.BS,2)
+        self.LB7 = RadioButton(self,parent.app.theme_manager,"32",no_select,select,self.buffer_size,self.bs,2)
         self.LB7.grid(row=13, column=0,sticky="w",padx=110)
-        self.LB8 = RadioButton(self,parent.app.theme_manager,"64",NoSelect,Select,self.BufferSize,self.BS,3)
+        self.LB8 = RadioButton(self,parent.app.theme_manager,"64",no_select,select,self.buffer_size,self.bs,3)
         self.LB8.grid(row=13, column=0,sticky="w",padx=210)
-        self.LB9 = RadioButton(self,parent.app.theme_manager,"128",NoSelect,Select,self.BufferSize,self.BS,4)
+        self.LB9 = RadioButton(self,parent.app.theme_manager,"128",no_select,select,self.buffer_size,self.bs,4)
         self.LB9.grid(row=13, column=0,sticky="w",padx=310)
-        #Data Settings
-        Data = tk.Label(self, text="Data Settings", font=("Rockwell",20), pady=20)
-        parent.app.theme_manager.register_item("bgr", Data)
-        parent.app.theme_manager.register_item("txt", Data)
-        Data.grid(row=0,column=1,sticky="w")
-        #Mouse Tracking Setting - Yes/No
-        MouseTrackingLabel = tk.Label(self, text="Mouse Position", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", MouseTrackingLabel)
-        parent.app.theme_manager.register_item("txt", MouseTrackingLabel)
-        MouseTrackingLabel.grid(row=1,column=1, sticky="w", pady=10)
-        self.MTI = tk.IntVar()
-        self.RB1 = CheckButton(self, parent.app.theme_manager, Yes,No, self.MouseTracking,self.MTI)
+        # Data Settings
+        data = tk.Label(self, text="Data Settings", font=("Rockwell",20), pady=20)
+        parent.app.theme_manager.register_item("bgr", data)
+        parent.app.theme_manager.register_item("txt", data)
+        data.grid(row=0,column=1,sticky="w")
+        # Mouse Tracking Setting
+        mouse_tracking_label = tk.Label(self, text="Mouse Position", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", mouse_tracking_label)
+        parent.app.theme_manager.register_item("txt", mouse_tracking_label)
+        mouse_tracking_label.grid(row=1,column=1, sticky="w", pady=10)
+        # Mouse tracking value
+        self.mti = tk.IntVar()
+        self.RB1 = CheckButton(self, parent.app.theme_manager, self.yes, self.no, self.mouse_tracking, self.mti)
         self.RB1.grid(row=2,column=1, sticky="w")
-        #Pose Estimations /Mouse Behaviour
-        MouseBehaviourLabel = tk.Label(self, text="Mouse Behaviour", font=("Rockwell",16))
-        parent.app.theme_manager.register_item("bgr", MouseBehaviourLabel)
-        parent.app.theme_manager.register_item("txt", MouseBehaviourLabel)
-        MouseBehaviourLabel.grid(row=3,column=1, sticky="w",pady=10)
-        self.MBI = tk.IntVar()
-        self.RB2 = CheckButton(self, parent.app.theme_manager, Yes,No, self.MouseBehaviour,self.MBI)
+        # Pose Estimations/Mouse Behaviour
+        mouse_behaviour_label = tk.Label(self, text="Mouse Behaviour", font=("Rockwell",16))
+        parent.app.theme_manager.register_item("bgr", mouse_behaviour_label)
+        parent.app.theme_manager.register_item("txt", mouse_behaviour_label)
+        mouse_behaviour_label.grid(row=3,column=1, sticky="w",pady=10)
+        # Mouse behaviour value
+        self.mbi = tk.IntVar()
+        self.RB2 = CheckButton(self, parent.app.theme_manager, self.yes, self.no, self.mouse_behaviour, self.mbi)
         self.RB2.grid(row=4,column=1, sticky="w")
 
+        # Toggle all buttons
         self.togglebuttons()
 
     # Set Saved Video Directory and Display Label
-    def SetDirectory(self):
-        outputLocation = filedialog.askdirectory()
-        if not (outputLocation == ""):
-            config = configparser.ConfigParser()
-            config.read("config.ini")
-            config.set("General", "OutputPath", outputLocation)
+    def set_directory(self):
+        # Prompt for the directory
+        output_location = filedialog.askdirectory()
+        if not (output_location == ""):
+            self.config.read("config.ini")
+            config.set("General", "OutputPath", output_location)
             with open('config.ini', 'w') as f:
                 config.write(f)
-            self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
+            self.output_location_label.config(text="Output Location: " + output_location)
 
-    #Set the Generate Video config
-    def GenerateVideo(self):
+    # Set the Generate Video config
+    def generate_video(self):
         self.config.read("config.ini")
-        v = self.SVB.get()
+        # Get the variable value
+        v = self.svb.get()
         self.config.set("Video", "Generate_Video", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
 
     #Opens file path
-    def OpenPath(self):
+    def open_path(self):
         self.config.read("config.ini")
         output = self.config.get("General", "OutputPath")
         subprocess.Popen(f'explorer {os.path.realpath(output)}')
 
     #Changes config for playback buffer size
-    def BufferSize(self):
+    def buffer_size(self):
         self.config.read("config.ini")
-        bs = self.BS.get()
+        # Get variable valye
+        bs = self.bs.get()
         self.config.set("Video", "Buffer_Size", self.lookup_buffer[bs])
         with open('config.ini', 'w') as f:
             self.config.write(f)
 
     #Changes config for mouse location tracking
-    def MouseTracking(self):
+    def mouse_tracking(self):
         self.config.read("config.ini")
-        self.MTI.get()
+        # Get variable value
+        v = self.mti.get()
         self.config.set("Data", "Tracking_Data", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
 
     #Changes config for post estimation
-    def MouseBehaviour(self):
+    def mouse_behaviour(self):
         self.config.read("config.ini")
-        v = self.MBI.get()
+        # Get variable value
+        v = self.mbi.get()
         self.config.set("Data", "Behaviour_Data", self.lookup_boolean[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
 
-    def ThemeSave(self):
+    def theme_save(self):
         self.config.read("config.ini")
+        # Get variable valye
         v = self.ti.get()
         self.config.set("General", "Theme", self.lookup_theme[v])
         with open('config.ini', 'w') as f:
             self.config.write(f)
+        # Apply the new theme
         self.theme_manager.apply_theme_name(self.lookup_theme[v])
 
     def togglebuttons(self):
-        outputLocation = self.config.get('General', 'OutputPath')
-        if not os.path.exists(outputLocation):
-            self.config.set("General", "OutputPath", 'No Valid File Path Detected ')
+        # Get output location
+        output_location = self.config.get('General', 'OutputPath')
+        # Check if the paath doesn't exist
+        if not os.path.exists(output_location):
+            self.config.set("General", "OutputPath", 'No Valid File Path Detected')
             with open('config.ini', 'w') as f:
                 self.config.write(f)
-            self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
-        Variable = self.config.get('Data', 'tracking_data')
-        if Variable == '0':
+            self.output_location_label.config(text="Output Location: " + output_location)
+        # Tracking data
+        v = self.config.get('Data', 'tracking_data')
+        if v == '0':
             self.RB1.select()
-        Variable = self.config.get('Data', 'behaviour_data')
-        if Variable == '0':
+        # Behaviour data
+        v = self.config.get('Data', 'behaviour_data')
+        if v == '0':
             self.RB2.select()
-        Variable = self.config.get('Video', 'bounding_box')
-        if Variable == '0':
+        # Bounding box data
+        v = self.config.get('Video', 'bounding_box')
+        if v == '0':
             self.LB5.select()
-        Variable = self.config.get('General', 'Theme')
-        if Variable == "Light":
+        # Theme data
+        v = self.config.get('General', 'Theme')
+        if v == "Light":
             self.TB1.select()
-        if Variable == "Dark":
+        elif v == "Dark":
             self.TB3.select()
-        if Variable == "Debug":
+        elif v == "Debug":
             self.TB4.select()
-        Variable = self.config.get('Video', 'buffer_size')
-        if Variable == "16":
+        # Buffer size data
+        v = self.config.get('Video', 'buffer_size')
+        if v == "16":
             self.LB6.select()
-        if Variable == "32":
+        elif v == "32":
             self.LB7.select()
-        if Variable == "64":
+        elif v == "64":
             self.LB8.select()
-        if Variable == "128":
+        elif v == "128":
             self.LB9.select()
 
 # - BUTTON ITEMS
@@ -628,9 +636,6 @@ class MenuButton(tk.Button):
     def on_leave(self, event):
         if (not self.active):
             self.configure(image=self.tab)
-
-    def reConfigure(self, newBG, newFontColor):
-        self.config(bg=newBG, fg=newFontColor)
 
     def set_active(self, state):
         self.active = state
@@ -766,12 +771,6 @@ class VideoQueue(tk.Frame):
         self.text.append(video_length)
         # Configure scroll item height
         self.scrollitems.config(scrollregion=(0, 0, 0, (count * (self.render_height + self.render_spacing)) - self.render_spacing))
-
-    # Function to remove a video
-    def remove_video(self, video):
-        # Remove video from the array
-        self.videos.remove(video)
-        # TODO: Remove video render here
 
     # Function to clear the videos
     def clear_videos(self):
