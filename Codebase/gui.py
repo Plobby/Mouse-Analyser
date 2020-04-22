@@ -329,8 +329,8 @@ class DataPage(tk.Frame):
             self.graph_figure, self.my_plot = graph_generator.create_stacked_bar_chart(graph_figure, 0.33333333333, 5, position_meaning, position_list)
 
             # Set axes labels
-            self.myPlot.set_xlabel("Frames")
-            self.myPlot.set_ylabel("Activity Per Time Division")
+            self.my_plot.set_xlabel("Frames")
+            self.my_plot.set_ylabel("Activity Per Time Division")
             # Redraw canvas
             self.canvas.draw()
 
@@ -359,8 +359,8 @@ class DataPage(tk.Frame):
             self.graph_figure, self.my_plot = graph_generator.create_position_chart(graph_figure, mouse_pos, 640, 480)
 
             # Update axes labels
-            self.myPlot.set_xlabel("X Position")
-            self.myPlot.set_ylabel("Y Position")
+            self.my_plot.set_xlabel("X Position")
+            self.my_plot.set_ylabel("Y Position")
             # Redraw graph
             self.canvas.draw()
 
