@@ -4,85 +4,85 @@ import numpy
 import numpy as np
 
 """ Implementation of Otsu's thresholding algorithm to find best threshold for a grayscale frame
-More info: http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html """
+More info: http://www.labbookpages.co.uk/software/imgProc/otsu_threshold.html """
 
-def otsuThreshold(inpFrame):
+def otsu_threshold(inp_frame):
     #Turn frame to greyscale
-    inpFrame = cv2.cvtColor(inpFrame, cv2.COLOR_BGR2GRAY)
+    inp_frame = cv2.cvtColor(inp_frame, cv2.COLOR_BGR2GRAY)
     #Number of colour channels
     channels = 256
-    #Find histogram representing inpFrame
-    hist = cv2.calcHist([inpFrame.astype("float32")], [0], None, [channels], [0, 256])
+    #Find histogram representing inp_frame
+    hist = cv2.calcHist([inp_frame.astype("float32")], [0], None, [channels], [0, 256])
     #Find total number of pixels in image
-    totalPixels = sum(hist)
+    total_pixels = sum(hist)
     
     #Keep track of best threshold value and its BC Variance
-    bestThreshold = 0
-    bestBCVariance = 0.0
-    #Test each possible threshold and update bestThreshold
+    best_threshold = 0
+    best_bc_variance = 0.0
+    #Test each possible threshold and update best_threshold
     for threshold in range(0, channels):
         #Find total number of pixels lower than threshold
-        pixelsBackground = sum(hist[:threshold + 1])
+        pixels_background = sum(hist[:threshold + 1])
         #Find total number of pixels greater than threshold
-        pixelsForeground = sum(hist[threshold + 1:])
+        pixels_foreground = sum(hist[threshold + 1:])
 
         #Calculate weight of background pixels
-        weightBackground = pixelsBackground / totalPixels
+        weight_background = pixels_background / total_pixels
         #Calculate mean of background pixels
-        sumValues = 0
+        sum_values = 0
         for i in range(0, threshold):
-            sumValues += hist[i] * i
+            sum_values += hist[i] * i
 
-        meanBackground = 0
-        if (not pixelsBackground == 0):
-            meanBackground = sumValues / pixelsBackground
+        mean_background = 0
+        if (not pixels_background == 0):
+            mean_background = sum_values / pixels_background
 
         #Calculate weight of foreground pixels
-        weightForeground = pixelsForeground / totalPixels
+        weight_foreground = pixels_foreground / total_pixels
         #Calculate mean of foreground pixels
-        sumValues = 0
+        sum_values = 0
         for i in range(threshold, 256):
-            sumValues += hist[i] * i
+            sum_values += hist[i] * i
 
-        #print(pixelsForeground + " total foreground pixels!")
-        meanForeground = 0
-        if (not pixelsForeground == 0):
-            meanForeground = sumValues / pixelsForeground
+        #print(pixels_foreground + " total foreground pixels!")
+        mean_foreground = 0
+        if (not pixels_foreground == 0):
+            mean_foreground = sum_values / pixels_foreground
 
         #Calculate Between Class Variance for the frame
-        betweenClassVariance = (weightBackground * weightForeground) * ((meanBackground - meanForeground) ** 2)
+        between_class_variance = (weight_background * weight_foreground) * ((mean_background - mean_foreground) ** 2)
 
-        #Update bestThreshold & bestBCVariance with highest BC Variance
-        if betweenClassVariance > bestBCVariance:
-            bestThreshold = threshold
-            bestBCVariance = betweenClassVariance
+        #Update best_threshold & best_bc_variance with highest BC Variance
+        if between_class_variance > best_bc_variance:
+            best_threshold = threshold
+            best_bc_variance = between_class_variance
 
-    #Return bestThreshold
-    return bestThreshold * 0.5
+    #Return best_threshold
+    return best_threshold * 0.5
 
 """ Function to segment fore and background of a frame using threshold value """
-def thresholdSegment(inpFrame, threshold):
+def threshold_segment(inp_frame, threshold):
     #Turn frame to greyscale
-    inpFrame = cv2.cvtColor(inpFrame, cv2.COLOR_BGR2GRAY)
-    #Create a copy of inpFrame to be modified
-    frame = numpy.zeros(inpFrame.shape, dtype=numpy.uint8)
+    inp_frame = cv2.cvtColor(inp_frame, cv2.COLOR_BGR2GRAY)
+    #Create a copy of inp_frame to be modified
+    frame = numpy.zeros(inp_frame.shape, dtype=numpy.uint8)
 
     # #Percentages of x and y to not include in foreground
-    borderPercentX = 0.05
-    borderPercentY = 0.05
+    border_percent_x = 0.05
+    border_percent_y = 0.05
 
-    xRange = range(int(inpFrame.shape[0] * borderPercentX), int(inpFrame.shape[0] - (inpFrame.shape[0] * borderPercentX)))
-    yRange = range(int(inpFrame.shape[1] * borderPercentY), int(inpFrame.shape[1] - (inpFrame.shape[1] * borderPercentX)))
+    x_range = range(int(inp_frame.shape[0] * border_percent_x), int(inp_frame.shape[0] - (inp_frame.shape[0] * border_percent_x)))
+    y_range = range(int(inp_frame.shape[1] * border_percent_y), int(inp_frame.shape[1] - (inp_frame.shape[1] * border_percent_x)))
     
-    #Iterate through inpFrame (a 2D array), changing pixel value to white or black based on threshold
-    for _, x in enumerate(xRange):
-        for __, y in enumerate(yRange):
-            if inpFrame[x, y] < threshold:
+    #Iterate through inp_frame (a 2D array), changing pixel value to white or black based on threshold
+    for _, x in enumerate(x_range):
+        for __, y in enumerate(y_range):
+            if inp_frame[x, y] < threshold:
                 frame[x, y] = 255
             else:
                 frame[x, y] = 0
 
     return frame
 
-def deNoise(currentFrame, prevFrame):
+def de_noise(current_frame, prev_frame):
     return None
