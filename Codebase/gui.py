@@ -105,7 +105,6 @@ class VideoPage(tk.Frame):
     def __init__(self, parent):
         # Bind parent
         self.parent = parent.app
-        #self.mouseData = [] # Now contained in parent.mousedata!
         # Call superclass function
         tk.Frame.__init__(self, parent)
         parent.app.theme_manager.register_item("bgr", self)
