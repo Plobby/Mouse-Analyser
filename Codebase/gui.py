@@ -258,7 +258,7 @@ class DataPage(tk.Frame):
         title_entry.grid(row = 2, column = 2, sticky = "nesw", padx = 50, pady = 5)
 
         # Set title button
-        set_button = tk.Button(self, text="Set Title", command=lambda: self.set_title(title_entry, self.myPlot))
+        set_button = tk.Button(self, text="Set Title", command=lambda: self.set_title(title_entry, self.my_plot))
         self.theme_manager.register_item("bgr", set_button)
         self.theme_manager.register_item("txt", set_button)
         set_button.grid(row = 2, column = 3, sticky = "nesw", padx = 5, pady = 5)
