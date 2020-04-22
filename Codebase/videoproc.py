@@ -11,51 +11,51 @@ from multiprocessing import Process, Queue
 from threading import Thread
 from itertools import chain, zip_longest
 
-"""Function that processes a video stored at videoSource to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
+"""Function that processes a video stored at video_source to find mouse in all frames of video. If the mouse cannot be found in a given frame, it is saved for later.
    The next time the mouse is found, that bounding box is also applied to all prior frames in which it was not found.
    After processing all frames, the bounding box is drawn on all frames and the video is returned."""
-def processVideo(videoSource, doSaveVid, outputLocation, func):
+def process_video_single(video_source, do_save_vid, output_location, func):
     #Dictionary containing bounding box locations for each frame (key = frame position)
-    frameBoundingBoxes = {}
+    frame_bounding_boxes = {}
     #List of unprocessed frames, by frame position in video
     unprocessed = []
     #Threshold value to be applied to all frames, as calculated from the first frame
-    videoThreshold = 0
+    video_threshold = 0
     
-    #Open the video stored at videoSource
-    video = cv2.VideoCapture(videoSource)
+    #Open the video stored at video_source
+    video = cv2.VideoCapture(video_source)
 
     # Get total frames of video
-    frameTotal = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    frame_total = video.get(cv2.CAP_PROP_FRAME_COUNT)
 
     #Get first frame of video
     ret, frame = video.read()
     #Calculate threshold if a frame is returned (ret == true)
     if ret:
-        videoThreshold = seg.otsuThreshold(frame)
+        video_threshold = seg.otsu_threshold(frame)
     counter = 0
 
     #Step through frames of video
     while video.isOpened():
         # Get frame number for current frame
-        framePos = video.get(cv2.CAP_PROP_POS_FRAMES)
+        frame_pos = video.get(cv2.CAP_PROP_POS_FRAMES)
         # Calculate percentage of processing done
-        percentage = (framePos / frameTotal) * 100
+        percentage = (frame_pos / frame_total) * 100
         func(percentage)
         #Set default bounding box in case no bounding box is ever found
-        frameBoundingBoxes[framePos] = [0, 0, 0, 0]
+        frame_bounding_boxes[frame_pos] = [0, 0, 0, 0]
         #Calculate bounding box size for mouse in frame
-        boundingBox = processFrame(frame, videoThreshold)
+        bounding_box = process_frame(frame, video_threshold)
 
         #If a bounding box is not found, save frame for later
-        if boundingBox == None:
-            unprocessed.append(framePos)
+        if bounding_box == None:
+            unprocessed.append(frame_pos)
         #Else use the bounding box of the current frame as the bounding box for any unprocessed frames before it
         else:
             while len(unprocessed) > 0:
-                frameBoundingBoxes[unprocessed.pop(0)] = boundingBox
-            #Add current frame's bounding box to frameBoundingBoxes
-            frameBoundingBoxes[framePos] = boundingBox
+                frame_bounding_boxes[unprocessed.pop(0)] = bounding_box
+            #Add current frame's bounding box to frame_bounding_boxes
+            frame_bounding_boxes[frame_pos] = bounding_box
 
         print("Processed frame: " + str(counter))
         counter += 1
@@ -66,28 +66,28 @@ def processVideo(videoSource, doSaveVid, outputLocation, func):
         if not ret:
             break
     
-    #Initialise variables and VideoWriter object needed to save videos if doSaveVid flag is true
-    if doSaveVid:
-        #Split videoSource string to find parent folder (source) and file name
-        if '/' in videoSource:
-            split = videoSource.split('/')
-        elif '\\' in videoSource:
-            split = videoSource.split('\\')
+    #Initialise variables and VideoWriter object needed to save videos if do_save_vid flag is true
+    if do_save_vid:
+        #Split video_source string to find parent folder (source) and file name
+        if '/' in video_source:
+            split = video_source.split('/')
+        elif '\\' in video_source:
+            split = video_source.split('\\')
         
-        fileName = split[-1].split('.')[0]    
+        file_name = split[-1].split('.')[0]    
 
-        if outputLocation == "No Valid File Path Detected":
-            outputLocation = "C:/mousehub_output"
+        if output_location == "No Valid File Path Detected":
+            output_location = "C:/mousehub_output"
 
         #Create cv2 VideoWriter object to output bounded video
-        out = cv2.VideoWriter(outputLocation + "/" + fileName + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
-        print(outputLocation + "/" + fileName + '-bounded.mp4')
+        out = cv2.VideoWriter(output_location + "/" + file_name + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+        print(output_location + "/" + file_name + '-bounded.mp4')
 
-    #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
-    mouseData = []
+    #List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouse_width, mouse_height])
+    mouse_data = []
 
     #Draw bounding box on to each frame of video and calculate com, width & height
-    for key, box in frameBoundingBoxes.items(): #Box contains [MinimumX, MaximumX, MinimumY, MaximumY] values for bounding box
+    for key, box in frame_bounding_boxes.items(): #Box contains [MinimumX, MaximumX, MinimumY, MaximumY] values for bounding box
         #Set frame position
         video.set(cv2.CAP_PROP_POS_FRAMES, key)
         #Get frame
@@ -109,27 +109,27 @@ def processVideo(videoSource, doSaveVid, outputLocation, func):
             break
         
         #Find width of mouse
-        mouseWidth = box[3] - box[2]
-        #Find height of mouseCCL
-        mouseHeight = box[1] - box[0]
+        mouse_width = box[3] - box[2]
+        #Find height of mouseccl
+        mouse_height = box[1] - box[0]
         #Find centre of mass of mouse
-        mouseCOM = (box[2] + (mouseWidth / 2), box[0] + (mouseHeight / 2))
+        mouse_com = (box[2] + (mouse_width / 2), box[0] + (mouse_height / 2))
 
-        #Add mouse data to mouseData (conventional coordinates i.e. (0,0) = bottom left corner)
-        mouseData.append([mouseCOM, mouseWidth, mouseHeight])
+        #Add mouse data to mouse_data (conventional coordinates i.e. (0,0) = bottom left corner)
+        mouse_data.append([mouse_com, mouse_width, mouse_height])
 
-        if doSaveVid:
+        if do_save_vid:
             #Save bounded frame
             out.write(frame)
 
     #Release video
     video.release()
     
-    #Release VideoWriter object if doSaveVid is true
-    if doSaveVid:
+    #Release VideoWriter object if do_save_vid is true
+    if do_save_vid:
         out.release()
 
-    return mouseData
+    return mouse_data
 
 def process_video(video_source, save, output_location, func):
     # Process count variable
@@ -184,12 +184,12 @@ def process_video(video_source, save, output_location, func):
     print(str(len(joined)) + " output frames generated")
     print("Processing time: " + str(datetime.timedelta(seconds=int(time.time() - start))))
 
-    # Open the video stored at videoSource
+    # Open the video stored at video_source
     video = cv2.VideoCapture(video_source)
 
-    # Initialise variables and VideoWriter object needed to save videos if doSaveVid flag is true
+    # Initialise variables and VideoWriter object needed to save videos if do_save_vid flag is true
     if save:
-        # Split videoSource string to find parent folder (source) and file name
+        # Split video_source string to find parent folder (source) and file name
         if '/' in video_source:
             split = video_source.split('/')
         elif '\\' in video_source:
@@ -204,7 +204,7 @@ def process_video(video_source, save, output_location, func):
         out = cv2.VideoWriter(output_location + "/" + file_name + '-bounded.mp4', cv2.VideoWriter_fourcc(*'mp4v'), int(video.get(cv2.CAP_PROP_FPS)), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
         print(output_location + "/" + file_name + '-bounded.mp4')
 
-    # List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouseWidth, mouseHeight])
+    # List containing data about the mouse from each frame (format: [mouseCentreOfMass, mouse_width, mouse_height])
     mouse_data = []
 
     # Draw bounding box on to each frame of video and calculate com, width & height
@@ -229,14 +229,14 @@ def process_video(video_source, save, output_location, func):
             break
         
         # Find width of mouse
-        mouseWidth = box[3] - box[2]
-        # Find height of mouseCCL
-        mouseHeight = box[1] - box[0]
+        mouse_width = box[3] - box[2]
+        # Find height of mouseccl
+        mouse_height = box[1] - box[0]
         # Find centre of mass of mouse
-        mouseCOM = (box[2] + (mouseWidth / 2), box[0] + (mouseHeight / 2))
+        mouse_com = (box[2] + (mouse_width / 2), box[0] + (mouse_height / 2))
 
         #Add mouse data to mouse_data (conventional coordinates i.e. (0,0) = bottom left corner)
-        mouse_data.append([mouseCOM, mouseWidth, mouseHeight])
+        mouse_data.append([mouse_com, mouse_width, mouse_height])
 
         if save:
             # Save bounded frame
@@ -245,7 +245,7 @@ def process_video(video_source, save, output_location, func):
     # Release video
     video.release()
     
-    # Release VideoWriter object if doSaveVid is true
+    # Release VideoWriter object if do_save_vid is true
     if save:
         out.release()
 
@@ -262,9 +262,9 @@ def processor_call(stopped, read_queue, outputs):
             # Read frame
             frame = read_queue.get(block=False)
             # Calculate threshold
-            video_threshold = seg.otsuThreshold(frame)
+            video_threshold = seg.otsu_threshold(frame)
             # Calculate bounding box size for mouse in frame
-            bounding_box = processFrame(frame, video_threshold)
+            bounding_box = process_frame(frame, video_threshold)
             # Add current frame's bounding box to outputs
             outputs.put(bounding_box)
             # Increment frame index
@@ -273,51 +273,51 @@ def processor_call(stopped, read_queue, outputs):
             print("Error reading frame: " + str(ex))
 
 """Function that attempt to find the mouse in a frame. If no mouse cannot be clearly found, return None. Else, return bounding box min and max values"""
-def processFrame(frame, threshold):
+def process_frame(frame, threshold):
      #Create segmented version of frame
-    segmented = seg.thresholdSegment(frame, threshold)
-    #Find all objects in segmented frame using CCL
-    objects = ccl.CCL(segmented)
+    segmented = seg.threshold_segment(frame, threshold)
+    #Find all objects in segmented frame using ccl
+    objects = ccl.ccl(segmented)
     
     #Create array to hold sorted objects keys
-    sortedKeys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)
+    sorted_keys = sorted(objects, key=lambda k: len(objects[k]), reverse=True)
     
-    #Set targetObject to the 2nd largest object in frame (assuming feed station is largest, mouse 2nd largest)
-    targetObject = sortedKeys[1]
+    #Set target_object to the 2nd largest object in frame (assuming feed station is largest, mouse 2nd largest)
+    target_object = sorted_keys[1]
     
     #Find extreme pixels in target object
-    MinX = frame.shape[0]
-    MaxX = 0
-    MinY = frame.shape[1]
-    MaxY = 0
+    min_x = frame.shape[0]
+    max_x = 0
+    min_y = frame.shape[1]
+    max_y = 0
 
-    for coord in objects[targetObject]:
-        if coord[0] < MinX:
-            MinX = coord[0]
-        if coord[0] > MaxX:
-            MaxX = coord[0]
-        if coord[1] < MinY:
-            MinY = coord[1]
-        if coord[1] > MaxY:
-            MaxY = coord[1]
+    for coord in objects[target_object]:
+        if coord[0] < min_x:
+            min_x = coord[0]
+        if coord[0] > max_x:
+            max_x = coord[0]
+        if coord[1] < min_y:
+            min_y = coord[1]
+        if coord[1] > max_y:
+            max_y = coord[1]
 
     #Apply heuristics to find invalid bounding boxes and return None
     
     #Height/width is too great
-    if ((MaxX - MinX) / (MaxY - MinY) > 4):
+    if ((max_x - min_x) / (max_y - min_y) > 4):
         return None
     #Width/height is too great
-    if ((MaxY - MinY) / (MaxX - MaxY) > 4):
+    if ((max_y - min_y) / (max_x - max_y) > 4):
         return None
     #Absolute height is too great
-    if (MaxX - MinX > frame.shape[0] / 4):
+    if (max_x - min_x > frame.shape[0] / 4):
         return None
     #Absolute width is too great
-    if (MaxY - MinY > frame.shape[1] / 4):
+    if (max_y - min_y > frame.shape[1] / 4):
         return None
 
     #Return bounding box information
-    return MinX, MaxX, MinY, MaxY
+    return min_x, max_x, min_y, max_y
 
 class MultiQueueInput():
     # Member variables
