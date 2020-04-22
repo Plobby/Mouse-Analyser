@@ -1,24 +1,24 @@
 import tkinter as tk
-from tkinter import filedialog
 import iomanager
 import numpy
-import matplotlib
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-matplotlib.use("TkAgg")
 from PIL import ImageTk, Image
 import configparser
 import subprocess
 import os
-import cv2 as cv2
+import cv2
 import time
 import math
 import datetime
 from threading import Timer, Thread
-from queue import Queue, Empty
+from queue import Queue
 import videoproc
-import graphing as graph # Import graphing under name graph
+import graphing as graph
+# MatPlotLib imports
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
 
 # Load a tk window and widthdraw to allow images to be loaded
 load = tk.Tk()
@@ -507,7 +507,7 @@ class SettingsPage(tk.Frame):
     # Set Saved Video Directory and Display Label
     def set_directory(self):
         # Prompt for the directory
-        output_location = filedialog.askdirectory()
+        output_location = tk.filedialog.askdirectory()
         if not (output_location == ""):
             self.config.read("config.ini")
             config.set("General", "OutputPath", output_location)
