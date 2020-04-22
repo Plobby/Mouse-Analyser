@@ -40,6 +40,7 @@ class App(tk.Tk):
     settings_page = None
     status_bar = None
     theme_manager = None
+    mouseData = []
 
     # Constructor
     def __init__(self, *args, **kwargs):
@@ -104,7 +105,7 @@ class VideoPage(tk.Frame):
     def __init__(self, parent):
         # Bind parent
         self.parent = parent.app
-        self.mouseData = []
+        #self.mouseData = [] # Now contained in parent.mousedata!
         # Call superclass function
         tk.Frame.__init__(self, parent)
         parent.app.theme_manager.register_item("bgr", self)
@@ -168,7 +169,7 @@ class VideoPage(tk.Frame):
         # Create new thread
         thread = Thread(target=self._process_videos, daemon=True, args=[videos, generate_bounded_video, output_location])
         thread.start()
-    
+
     # Private function to process videos on a separate thread
     def _process_videos(self, videos, generate_bounded_video, output_location):
         # Counter for video being processed
@@ -177,20 +178,26 @@ class VideoPage(tk.Frame):
         # Process all videos and append output to mouseData
         for video in videos:
             # Start processing video
-            self.mouseData.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
+            self.parent.mouseData.append(videoproc.processVideo(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
             self.processing_index += 1
         self.parent.status_bar.set_status("Ready to process.")
-    
+
     # Function to update the progress of the tracker
     def _progress_update(self, percentage):
         # Set processing status
         self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total) + " (" + "{:.1f}".format(percentage) + "%)")
-           
+
 class DataPage(tk.Frame):
     def __init__(self, parent):
         # Set theme manager
         self.theme_manager = parent.app.theme_manager
+
+        print(parent.app.mouseData) # The mouse data from processing!
+
+        mousePos = []
+        mouseWidth = []
+        mouseHeight = []
 
         # Call superclass function
         tk.Frame.__init__(self, parent)
@@ -201,7 +208,38 @@ class DataPage(tk.Frame):
         graphFigure = plt.figure() # Figure for graphing.
         graphGenerator = graph.dataGraph() # object to store datagraph in.
 
-        xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3}
+        # Warning labels! Should dissapear if not needed - aka if a video's been processed.
+
+        self.warningLabel = tk.Label(self, text = "Warning!", font = ("Rockwell",25))
+        self.theme_manager.register_item("bgr", self.warningLabel)
+        self.theme_manager.register_item("txt", self.warningLabel)
+        self.warningLabel.grid(row=0, column=2, sticky='nesw',padx=10,pady=5)
+
+        self.warningText = tk.Label(self, text = "No videos have been processed yet!\nDisplayed data is placeholder until then.", font = ("Rockwell",15))
+        self.theme_manager.register_item("bgr", self.warningText)
+        self.theme_manager.register_item("txt", self.warningText)
+        self.warningText.grid(row=1, column=2, sticky='nesw',padx=10,pady=5)
+
+        # Graph switching buttons!
+
+        #barGraphButton = tk.Button(self, text = "Bar Chart", font = ("Rockwell", 15), command=lambda: self.set_graph_bar(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
+        #self.theme_manager.register_item("bgr", barGraphButton)
+        #self.theme_manager.register_item("txt", barGraphButton)
+        #barGraphButton.grid(row=4, column=6, sticky='s',padx=50,pady=10)
+
+        stackBarButton = tk.Button(self, text = "Actogram Equivalent", font = ("Rockwell", 15), command=lambda: self.set_graph_bar_stacked(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
+        self.theme_manager.register_item("bgr", stackBarButton)
+        self.theme_manager.register_item("txt", stackBarButton)
+        stackBarButton.grid(row=5, column=6, sticky='nesw',padx=50,pady=10)
+
+        pathGraphButton = tk.Button(self, text = "Line Graph", font = ("Rockwell", 15), command=lambda: self.set_graph_line(parent.app.mouseData, graphGenerator, self.graphFigure, self.myPlot))
+        self.theme_manager.register_item("bgr", pathGraphButton)
+        self.theme_manager.register_item("txt", pathGraphButton)
+        pathGraphButton.grid(row=6, column=6, sticky='n',padx=50,pady=10)
+
+
+
+        xLabels = {"Sleeping":0,"Eating":1,"Moving":2,"Undefined":3} # Generate Placeholder data.
         yValues = [50,30,120,25]
         mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
 
@@ -209,19 +247,21 @@ class DataPage(tk.Frame):
         newList = []
 
         for num in range(0,bigNum):
-            if num <= bigNum/5:
-                newList.append(0)
-            elif num >= (bigNum/5)*4:
-                newList.append(0)
-            elif num > bigNum/5 and num < bigNum/7*2:
-                newList.append(2)
-            else:
-                newList.append(3)
+                if num <= bigNum/5:
+                    newList.append(0)
+                elif num >= (bigNum/5)*4:
+                    newList.append(0)
+                elif num > bigNum/5 and num < bigNum/7*2:
+                    newList.append(2)
+                else:
+                    newList.append(3)
 
         xLabels2 = [5,6,7,8,5,6]
         yValues2 = [4,5,6,7,8,3]
 
-        self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, [[100,120,140,150,160,140,200],[100,120,130,140,150,160,210]],640,480)
+        coordsXY = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
+
+        self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, coordsXY, 640, 480)
 
         # Title entry field
         titleEntry = tk.Entry(self)
@@ -271,6 +311,74 @@ class DataPage(tk.Frame):
         myPlot.set_title(titleEntry.get(), color=self.theme_manager.get_current_theme().text())
         # Redraw
         self.canvas.draw()
+
+    def set_graph_bar(self, mouseData, graphGenerator, graphFigure, myPlot):
+        print("Generating Bar Graph...")
+
+        graphFigure, myPlot = graphGenerator.createPositionChart(graphFigure, coordsXY, 640, 480)
+
+        self.canvas.draw()
+
+    def set_graph_bar_stacked(self, mouseData, graphGenerator, graphFigure, myPlot):
+        print("Generating Stacked Bar Graph...")
+
+        if len(mouseData) >= 1: # If there's any data to display...
+            positionMeaning = {}
+            positionList = []
+
+            myPlot.clear()
+            self.warningLabel.grid_forget()
+            self.warningText.grid_forget()
+
+            mousePos = []
+            mouseWidth = []
+            mouseHeight = []
+
+            for data in mouseData:
+                for item in data:
+                    #print("ITEM: "+ str(item))
+                    mousePos.append([item[0][0],item[0][1]])
+                    mouseWidth.append(item[1])
+                    mouseHeight.append(item[2])
+
+            #print(mousePos)
+
+            positionMeaning, positionList = graphGenerator.estimatePosesDefault(mouseWidth,mouseHeight,mousePos,640,480)
+
+            self.graphFigure, self.myPlot = graphGenerator.createStackedBarChart(graphFigure,0.33333333333,5,positionMeaning,positionList)
+
+            self.myPlot.set_xlabel("Frames")
+            self.myPlot.set_ylabel("Activity Per Time Division")
+
+            self.canvas.draw()
+
+    def set_graph_line(self, mouseData, graphGenerator, graphFigure, myPlot):
+        print("Generating Location trail graph")
+
+        if len(mouseData) >= 1: # If there's any data to display...
+            myPlot.clear()
+            self.warningLabel.grid_forget()
+            self.warningText.grid_forget()
+
+            mousePos = []
+            mouseWidth = []
+            mouseHeight = []
+
+            for data in mouseData:
+                for item in data:
+                    #print("ITEM: "+ str(item))
+                    mousePos.append([item[0][0],item[0][1]])
+                    mouseWidth.append(item[1])
+                    mouseHeight.append(item[2])
+
+            #print(mousePos)
+
+            self.graphFigure, self.myPlot = graphGenerator.createPositionChart(graphFigure, mousePos, 640, 480)
+
+            self.myPlot.set_xlabel("X Position")
+            self.myPlot.set_ylabel("Y Position")
+
+            self.canvas.draw()
 
 class SettingsPage(tk.Frame):
     lookup_boolean = {
@@ -411,7 +519,7 @@ class SettingsPage(tk.Frame):
             with open('config.ini', 'w') as f:
                 config.write(f)
             self.OutputLocationLabel.config(text="Output Location: " + outputLocation)
-    
+
     #Set the Generate Video config
     def GenerateVideo(self):
         self.config.read("config.ini")
@@ -603,7 +711,7 @@ class VideoQueue(tk.Frame):
         self.theme_manager.register_callback(self.on_theme_change)
         # Register mouse click events
         self.scrollitems.bind("<Button-1>", self.mouse_down)
-    
+
     def mouse_down(self, event):
         # Return if no videos are present
         if (len(self.videos) <= 0):
@@ -1107,7 +1215,7 @@ class VideoTrackbar(tk.Canvas):
             self.last_time = str(datetime.timedelta(seconds=elapsed)) + " / " + str(datetime.timedelta(seconds=total))
             # Draw the time string
             self.itemconfig(self.time_text, text=self.last_time)
-    
+
     # Callback function for when the theme has been changed
     def on_theme_change(self, theme):
         # Update bar colours
@@ -1294,7 +1402,7 @@ class ThemeManager:
     def register_item(self, objtype, obj):
         # Append the new item on the correct type
         self.items[objtype].append(obj)
-    
+
     # Register a callback function
     def register_callback(self, func):
         # Append the callback function
@@ -1331,7 +1439,7 @@ class ThemeManager:
         # Iterate callback functions and invoke
         for func in self.callbacks:
             func(theme)
-    
+
     # Function to apply a theme based on name
     def apply_theme_name(self, theme_name):
         # Get the theme from name
