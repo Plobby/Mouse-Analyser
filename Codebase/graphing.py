@@ -87,6 +87,24 @@ class DataGraph():
         else:
             print("The time period *must* be greater than the precision that the mouse is being tracked with!")
 
+
+        config_file = open("config.ini","r")
+        config_lines = config_file.readlines()
+
+        file_location = config_lines[2][13:]
+        print(file_location)
+        file_location = file_location.strip("\n")
+
+        log_file = open(file_location+"mousehub_data.log", "a+")
+
+        log_file.write("START OF FILE\n")
+
+        for pos_item in pos_list:
+            log_file.write(list(pos_meaning.keys())[list(pos_meaning.values()).index(pos_item)] + "\n")
+            #print(list(pos_meaning.keys())[list(pos_meaning.values()).index(pos_item)])
+
+        log_file.write("END OF FILE\n")
+
         return f, inner_plot
 
     def create_position_chart(self,f,coords_xy,vid_size_x,vid_size_y):
