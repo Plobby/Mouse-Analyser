@@ -107,6 +107,9 @@ class DataGraph():
 
         log_file.write("END OF FILE\n")
 
+        config_file.close()
+        log_file.close()
+
         return f, inner_plot
 
     def create_position_chart(self,f,coords_xy,vid_size_x,vid_size_y):
