@@ -133,7 +133,7 @@ def process_video_single(video_source, do_save_vid, output_location, func):
 
 def process_video(video_source, save, output_location, func):
     # Process count variable
-    process_percent = 0.25
+    process_percent = 0.5
     process_count = int(mp.cpu_count() * process_percent)
     # Create new list for queue buffers
     process_queues = []
