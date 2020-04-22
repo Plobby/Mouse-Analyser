@@ -1,135 +1,96 @@
 import tkinter as tk
-from tkinter import ttk
-import matplotlib
+from math import *
+# MatPlotLib imports
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk # Importing figure canvas for tkinter integration and also the navigation toolbar
 from matplotlib.backend_bases import key_press_handler # Keypress handler
 from matplotlib.figure import Figure # Figure is used for tkinter integration
 import matplotlib.pyplot as plt
+import matplotlib
 matplotlib.use("TkAgg")
-import numpy as np
-from math import *
-import gui
-import cli
-import sys
-
-def Translate(timeInWords): # Needs string input of time in english words, standard grammar, no full stop.
-    words = [] # Storage for words.
-    totalTime = 0 # Storage for total time conversion, in ns.
-    timeConversion = {"SECONDS" : 1, "SECOND" : 1, "MINUTES" : 60, "MINUTE" : 60, "HOURS" : 3600,  "HOUR" : 3600, "DAY" : 86400, "DAYS" : 86400}
-    # timeConversion is a dict used to translate the number & unit into seconds i.e. 3 Minutes is turned into 3 * 60 = 180 seconds.
-    words = list(timeInWords.split(' '))
-
-    while len(words) > 0: # As long as the list still has things in...
-        timeUnit = words.pop()
-        timeNumber = words.pop()
-        totalTime += int(timeNumber) * timeConversion[timeUnit.upper()] # Add the transl;ated time to the total time.
-
-    return totalTime
 
 class DataGraph():
+    # Constructor
     def __init__(self):
         self._x_list = []
         self._y_list = []
 
     # Function to create a stacked bar chart
-    def create_stacked_bar_chart(self,f,timeGapPerReportedPosition,timePeriodPerBar,positionMeaning,positionList):
-        innerPlot = f.add_subplot(1,1,1)
-        indexDict = []
-        if timePeriodPerBar > timeGapPerReportedPosition: # The time period per bar *must* be larger than the gap that the positions are reported in - else the program will break.
-            # First job is to seperate positionList into meanings.
-            tempList = []
+    def create_stacked_bar_chart(self, f, time_per_pos, time_per_bar, pos_meaning, pos_list):
+        inner_plot = f.add_subplot(1,1,1)
+        index_dict = []
+        if time_per_bar > time_per_pos: # The time period per bar *must* be larger than the gap that the positions are reported in - else the program will break.
+            # First job is to seperate pos_list into meanings.
+            temp_list = []
 
-            for meaning in positionMeaning: # For each meaning in the dict of meanings....
-                itemChecker = positionMeaning[meaning] # Set the checker to the current meaning.
-                for x in range(0, len(positionList)-1): # For each item in the position list
-                    #print(x)
-                    #print(positionList)
-                    if positionList[x] == itemChecker: # Check if the current value is the one being searched for
-                        tempList.append(1) # If it is, append 1 to the temporary list
+            for meaning in pos_meaning: # For each meaning in the dict of meanings....
+                item_checker = pos_meaning[meaning] # Set the checker to the current meaning.
+                for x in range(0, len(pos_list)-1): # For each item in the position list
+                    if pos_list[x] == item_checker: # Check if the current value is the one being searched for
+                        temp_list.append(1) # If it is, append 1 to the temporary list
                     else: # If it isn't...
-                        tempList.append(0) # ... append 0.
+                        temp_list.append(0) # ... append 0.
 
 
-                indexDict += [tempList] # Slowly creating a 2d list by storing each kind of action as a binary list of whether it's currently being performed.
-                tempList = [] # Empty the temporary list once it's finished :)
-            barValues = []
-            tempList = []
+                index_dict += [temp_list] # Slowly creating a 2d list by storing each kind of action as a binary list of whether it's currently being performed.
+                temp_list = [] # Empty the temporary list once it's finished :)
+            indexDict = []
+            temp_list = []
 
             # Next step is to turn the new binary lists into graphable values.
-
-            #print("Should be five:", round(timePeriodPerBar/timeGapPerReportedPosition))
-
-            for listItem in indexDict: # For each list inside the index...
+            for listItem in index_dict: # For each list inside the index...
                 loopInt = 1
                 positionValue = 0
                 for xy in listItem: # For each item inside each list...
                     positionValue += xy
-                    if loopInt % round(timePeriodPerBar/timeGapPerReportedPosition) == 0: # Check if the looping integer is divisible by a divison between the time per bar divided by the time gap between reports.
-                        #tempList.append(xy)
-                        tempList.append(positionValue)
+                    if loopInt % round(time_per_bar/time_per_pos) == 0: # Check if the looping integer is divisible by a divison between the time per bar divided by the time gap between reports.
+                        temp_list.append(positionValue)
                         positionValue = 0
                     loopInt += 1
 
-                barValues += [tempList]
-                tempList = []
+                bar_values += [temp_list]
+                temp_list = []
 
              # We also need a list for the other axis. That's where this next little loop comes in - it makes that list.
 
             xValues = []
-            xValue = round(timePeriodPerBar/timeGapPerReportedPosition)
+            xValue = round(time_per_bar/time_per_pos)
 
-            for things in barValues[0]: # Makes a number of bars equal to the amount of data inputted.
+            for things in bar_values[0]: # Makes a number of bars equal to the amount of data inputted.
                 xValues.append(xValue)
-                xValue += round(timePeriodPerBar/timeGapPerReportedPosition) # The values for the bars are the same as the difference from before.
+                xValue += round(time_per_bar/time_per_pos) # The values for the bars are the same as the difference from before.
 
-            #print(barValues)
-            #print(xValues)
             useList = []
-            highestValues = barValues[0]
+            highestValues = bar_values[0]
             rotator = 0
 
             # A little double for loop for creating a list of the highest values for each bar.
             # This is necessary because of the awkward way tkinter deals with stacked bar charts.
 
-            for barList in barValues:
+            for barList in bar_values:
                 for item in barList:
                     if item > highestValues[rotator]:
                         highestValues[rotator] = item
                 rotator = 0
 
             stackValue = 0;
-            use = plt.bar(xValues,barValues[0])
+            use = plt.bar(xValues,bar_values[0])
             useList.append(use)
 
-            print(len(barValues))
+            print(len(bar_values))
 
-            while stackValue < len(barValues)-1: # This section creates the actual graph.
-                use = plt.bar(xValues,barValues[stackValue+1], bottom = highestValues)
+            while stackValue < len(bar_values)-1: # This section creates the actual graph.
+                use = plt.bar(xValues,bar_values[stackValue+1], bottom = highestValues)
                 useList.append(use)
                 stackValue += 1
 
-            #print(useList)
-            #print(positionMeaning)
-
-            plt.legend(useList,positionMeaning)
-
-
+            plt.legend(useList,pos_meaning)
         else:
             print("The time period *must* be greater than the precision that the mouse is being tracked with!")
-            '''
-            popmessage = tk.Tk()
-            popmessage.wm_title("Error")
-            ttk.Label(popmessage, text = "The time period *must* be greater than the precision that the mouse is being tracked with!").pack()
-            ttk.Button(popmessage, text = "Okay! :)", command = popmessage.destroy()).pack()
-            popmessage.mainloop()
-            '''
 
-        return f, innerPlot
-
-    # Bottom left is 0,0 for the pose estimation
+        return f, inner_plot
 
     def create_position_chart(self,f,coordsXY,vidSizeX,vidSizeY):
-        innerPlot = f.add_subplot(1,1,1)
+        inner_plot = f.add_subplot(1,1,1)
 
         realCoords = [[],[]]
 
@@ -143,18 +104,17 @@ class DataGraph():
         axes.set_xlim([0,vidSizeX]) # Create fixed size axis for my
         axes.set_ylim([0,vidSizeY])
 
-        return f, innerPlot
+        return f, inner_plot
 
     def estimate_poses_default(self,xSizes,ySizes,enteredCoords,vidSizeX,vidSizeY):
-
-        coordsXY = [[],[]]
+        coords = [[],[]]
 
         for item in enteredCoords:
-            coordsXY[0].append(item[0])
-            coordsXY[1].append(item[1])
+            coords[0].append(item[0])
+            coords[1].append(item[1])
 
-        positionList = [] # Used to contain the positions eventually.
-        positionMeaning = {"Undefined":0,"Eating":1,"Moving":2,"Hanging":3,"Sleeping":4} # Used to store the relevant meaning of each integer in the final list.
+        pos_list = [] # Used to contain the positions eventually.
+        pos_meaning = {"Undefined":0,"Eating":1,"Moving":2,"Hanging":3,"Sleeping":4} # Used to store the relevant meaning of each integer in the final list.
 
         sizeRotate = 0 # Variable to keep track of the current frame.
         currentPosCount = 0 # Variable to define how long the mouse has been in it's current position.
@@ -164,47 +124,26 @@ class DataGraph():
         while sizeRotate < len(xSizes): # While the current frame is less than the frames in the x list... (Loop through the frames once)
 
             if xSizes[sizeRotate]*2 < ySizes[sizeRotate]: # If the mouse is more than twice as long as tall...
-                positionList.append(1)
-            elif abs(coordsXY[0][sizeRotate-20] - coordsXY[0][sizeRotate]) >= 20 and abs(coordsXY[1][sizeRotate-20] - coordsXY[1][sizeRotate]) >= 20:
+                pos_list.append(1)
+            elif abs(coords[0][sizeRotate-20] - coords[0][sizeRotate]) >= 20 and abs(coords[1][sizeRotate-20] - coords[1][sizeRotate]) >= 20:
                 # If the centre of the mouse is moving more than 20 pixels every 20 frames (1px/frame), then it is moving.
-                positionList.append(2)
-            elif coordsXY[1][sizeRotate] > vidSizeY/2:
+                pos_list.append(2)
+            elif coords[1][sizeRotate] > vidSizeY/2:
                 # If the mouse's centre of mass is higher than half the video width then the little lad must be hanging from the roof!!!
-                positionList.append(3)
+                pos_list.append(3)
             elif sizeRotate > timeToSleep: # If we're more than the time needed to sleep...
-                if xSizes[sizeRotate] >= (ySizes[sizeRotate]*1.5) and abs(coordsXY[0][sizeRotate-timeToSleep] - coords[0][sizeRotate]) < 30 and  abs(coordsXY[1][sizeRotate-timeToSleep] - coords[1][sizeRotate]) < 30: # If the mouse is more than 1.5x as tall as long...
+                if xSizes[sizeRotate] >= (ySizes[sizeRotate]*1.5) and abs(coords[0][sizeRotate-timeToSleep] - coords[0][sizeRotate]) < 30 and  abs(coords[1][sizeRotate-timeToSleep] - coords[1][sizeRotate]) < 30: # If the mouse is more than 1.5x as tall as long...
                     # If the difference between the central position of the mouse 20 frames ago and the central position of the mouse currently is less than 30 pixels in the x and y directions, then it hasn't moved very far and must be asleep.
                     # The mouse has to stay reasonably still for 1200 frames (within 30 px on x and y axis) to be classed as still in this system.
                     # Then it will be classed as asleep.
-                    positionList.append(4)
+                    pos_list.append(4)
                 else:
-                    positionList.append(0) # Undefined behaviour.
+                    pos_list.append(0) # Undefined behaviour.
 
             else: # if we don't know what else to do...
-                positionList.append(0) #            ...it must be undefined.
+                pos_list.append(0) #            ...it must be undefined.
 
             sizeRotate+=1
 
 
-        return positionMeaning, positionList
-
-"""
-if __name__ == "__main__":
-    jeff = Translate("4 days 3 Hours 23 Minutes 33 Seconds")
-    print("Total Time in seconds: "+ str(jeff))
-
-    newGraph = plt.Figure(facecolor="#202020")
-    gen = dataGraph()
-
-    xLabels = {"Sleeping":0,
-    "Eating":1,
-    "Moving":2,
-    "Undefined":3}
-    mouseReport = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,3,3,3,3,3,3,3,3,3,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2]
-
-    coordsXY = [[100,50],[110,60],[100,70],[90,80],[90,90],[80,90],[70,80],[80,90],[90,100],[100,110]]
-    newgraph, myPlot = gen.createPositionChart(newGraph, coordsXY, 640, 480)
-
-    plt.show()
-    input()
-"""
+        return pos_meaning, pos_list

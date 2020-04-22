@@ -180,7 +180,7 @@ class VideoPage(tk.Frame):
             # Update status
             self.parent.status_bar.set_status("Processing video " + str(self.processing_index) + " of " + str(self.processing_total))
             # Start processing video
-            self.parent.mouseData.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
+            self.parent.mouse_data.append(videoproc.process_video(video.file, generate_bounded_video, output_location, self._progress_update))
             # Increment processing counter
             self.processing_index += 1
         self.parent.status_bar.set_status("Ready to process.")
@@ -510,9 +510,9 @@ class SettingsPage(tk.Frame):
         output_location = tk.filedialog.askdirectory()
         if not (output_location == ""):
             self.config.read("config.ini")
-            config.set("General", "OutputPath", output_location)
+            self.config.set("General", "OutputPath", output_location)
             with open('config.ini', 'w') as f:
-                config.write(f)
+                self.config.write(f)
             self.output_location_label.config(text="Output Location: " + output_location)
 
     # Set the Generate Video config
