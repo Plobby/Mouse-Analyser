@@ -222,7 +222,7 @@ class DataPage(tk.Frame):
         stack_bar_button.grid(row=5, column=6, sticky='nesw',padx=50,pady=10)
 
         # Path graph button
-        path_graph_button = tk.Button(self, text = "Line Graph", font = ("Rockwell", 15), command=lambda: self.set_graph_line(parent.app.mouse_data, graph_generator, graph_figure, self.my_olot))
+        path_graph_button = tk.Button(self, text = "Line Graph", font = ("Rockwell", 15), command=lambda: self.set_graph_line(parent.app.mouse_data, graph_generator, graph_figure, self.my_plot))
         self.theme_manager.register_item("bgr", path_graph_button)
         self.theme_manager.register_item("txt", path_graph_button)
         path_graph_button.grid(row=6, column=6, sticky='n',padx=50,pady=10)

@@ -18,6 +18,7 @@ class DataGraph():
     def create_stacked_bar_chart(self, f, time_per_pos, time_per_bar, pos_meaning, pos_list):
         inner_plot = f.add_subplot(1,1,1)
         index_dict = []
+        bar_values = []
         if time_per_bar > time_per_pos: # The time period per bar *must* be larger than the gap that the positions are reported in - else the program will break.
             # First job is to seperate pos_list into meanings.
             temp_list = []
@@ -46,7 +47,6 @@ class DataGraph():
                         temp_list.append(positionValue)
                         positionValue = 0
                     loopInt += 1
-
                 bar_values += [temp_list]
                 temp_list = []
 
