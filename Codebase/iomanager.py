@@ -82,6 +82,7 @@ def save_videos(videoCaps, outputLocation):
 
 class VideoInput():
     cap = None
+    file = None
     queue_size = None
     stopped = False
     frames_fps = 0
